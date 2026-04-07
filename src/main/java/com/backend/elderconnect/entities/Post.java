@@ -67,4 +67,9 @@ public class Post {
     @ManyToMany(mappedBy = "savedPosts")
     private Set<User> savedByUsers = new HashSet<>();
 
+    // Support for forwarding posts
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "original_post_id", nullable = true)
+    private Post originalPost;
+
 }

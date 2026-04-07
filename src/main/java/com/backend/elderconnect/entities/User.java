@@ -88,4 +88,10 @@ public class User {
     )
     private Set<Post> savedPosts = new HashSet<>();
 
+    @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Set<UserRole> roles = new HashSet<>();
+
 }
