@@ -13,4 +13,6 @@ public class PostRequest {
     
     private String pictureUrl;
     private Long communityId;
+    private java.time.LocalDateTime eventDate;
+    private Long locationId;
 }

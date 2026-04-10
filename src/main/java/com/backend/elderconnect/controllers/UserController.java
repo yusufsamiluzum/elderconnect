@@ -47,6 +47,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getMyStats());
     }
 
+    @GetMapping("/me/official-stats")
+    public ResponseEntity<?> getOfficialStats() {
+        return ResponseEntity.ok(userService.getOfficialStats());
+    }
+
     @GetMapping("/me/saved")
     public ResponseEntity<?> getMySavedPosts() {
         return ResponseEntity.ok(userService.getMySavedPosts());
@@ -89,7 +94,7 @@ public class UserController {
                 .score(post.getScore())
                 .createdAt(post.getCreatedAt())
                 .authorName(post.getAuthor().getUsername())
-                .isOfficialAuthor(post.getAuthor().isConfirmed())
+                .isOfficialAuthor(post.getAuthor().isApproved())
                 .commentCount((long) post.getComments().size())
                 .build();
     }

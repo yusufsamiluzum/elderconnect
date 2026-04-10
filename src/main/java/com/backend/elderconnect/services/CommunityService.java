@@ -6,7 +6,10 @@ import com.backend.elderconnect.dto.UserProfileDTO;
 import com.backend.elderconnect.entities.Community;
 import com.backend.elderconnect.entities.CommunityType;
 import com.backend.elderconnect.entities.User;
+import com.backend.elderconnect.entities.CommunityRequest;
+import com.backend.elderconnect.entities.CommunityRequestStatus;
 import com.backend.elderconnect.repositories.CommunityRepository;
+import com.backend.elderconnect.repositories.CommunityRequestRepository;
 import com.backend.elderconnect.repositories.PostRepository;
 import com.backend.elderconnect.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,9 @@ import java.util.stream.Collectors;
 public class CommunityService {
     @Autowired
     CommunityRepository communityRepository;
+
+    @Autowired
+    CommunityRequestRepository communityRequestRepository;
 
     @Autowired
     UserRepository userRepository;
@@ -72,7 +78,29 @@ public class CommunityService {
     }
 
     @Transactional
-    public void joinOrLeaveCommunity(Long id) {
+    public void requestJoinCommunity(Long id) {
+        String username = getCurrentUsername();
+        User user = userRepository.findByUsername(username).get();
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Error: Community not found."));
+
+        if (community.getMembers().contains(user)) {
+             throw new RuntimeException("Error: You are already a member.");
+        }
+
+        if (communityRequestRepository.findByCommunityIdAndUserId(id, user.getId()).isPresent()) {
+             throw new RuntimeException("Error: You already have a pending request.");
+        }
+
+        CommunityRequest req = new CommunityRequest();
+        req.setCommunity(community);
+        req.setUser(user);
+        req.setStatus(CommunityRequestStatus.PENDING);
+        communityRequestRepository.save(req);
+    }
+
+    @Transactional
+    public void leaveCommunity(Long id) {
         String username = getCurrentUsername();
         User user = userRepository.findByUsername(username).get();
         Community community = communityRepository.findById(id)
@@ -80,10 +108,51 @@ public class CommunityService {
 
         if (community.getMembers().contains(user)) {
             community.getMembers().remove(user);
-        } else {
-            community.getMembers().add(user);
         }
         communityRepository.save(community);
+    }
+
+    public List<UserProfileDTO> getPendingRequests(Long communityId) {
+        Community community = communityRepository.findById(communityId)
+                .orElseThrow(() -> new RuntimeException("Error: Community not found."));
+        
+        String username = getCurrentUsername();
+        User currentUser = userRepository.findByUsername(username).get();
+        if (!community.getModerators().contains(currentUser)) {
+            throw new RuntimeException("Error: Unauthorized. Only community admin can view requests.");
+        }
+
+        return communityRequestRepository.findByCommunityIdAndStatus(communityId, CommunityRequestStatus.PENDING).stream()
+                .map(req -> mapUserToDTO(req.getUser()))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void handleJoinRequest(Long communityId, Long requestId, boolean approved) {
+        Community community = communityRepository.findById(communityId)
+                .orElseThrow(() -> new RuntimeException("Error: Community not found."));
+        
+        String username = getCurrentUsername();
+        User currentUser = userRepository.findByUsername(username).get();
+        if (!community.getModerators().contains(currentUser)) {
+            throw new RuntimeException("Error: Unauthorized. Only community admin can handle requests.");
+        }
+
+        CommunityRequest req = communityRequestRepository.findById(requestId)
+                .orElseThrow(() -> new RuntimeException("Error: Request not found."));
+
+        if (!req.getCommunity().getId().equals(communityId)) {
+            throw new RuntimeException("Error: Request does not belong to this community.");
+        }
+
+        if (approved) {
+            req.setStatus(CommunityRequestStatus.APPROVED);
+            community.getMembers().add(req.getUser());
+            communityRepository.save(community);
+        } else {
+            req.setStatus(CommunityRequestStatus.REJECTED);
+        }
+        communityRequestRepository.save(req);
     }
 
     public List<PostResponseDTO> getCommunityPosts(Long id, int page, int size) {
@@ -175,7 +244,7 @@ public class CommunityService {
                 .score(post.getScore())
                 .createdAt(post.getCreatedAt())
                 .authorName(post.getAuthor().getUsername())
-                .isOfficialAuthor(post.getAuthor().isConfirmed())
+                .isOfficialAuthor(post.getAuthor().isApproved())
                 .commentCount((long) post.getComments().size())
                 .originalPostId(post.getOriginalPost() != null ? post.getOriginalPost().getId() : null)
                 .build();
@@ -188,7 +257,7 @@ public class CommunityService {
                 .surname(user.getSurname())
                 .description(user.getDescription())
                 .joinedAt(user.getJoinedAt())
-                .isConfirmed(user.isConfirmed())
+                .isApproved(user.isApproved())
                 .build();
     }
 }

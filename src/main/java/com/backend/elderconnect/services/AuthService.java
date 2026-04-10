@@ -45,6 +45,12 @@ public class AuthService {
         String jwt = jwtUtils.generateJwtToken(authentication);
 
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        
+        User user = userRepository.findById(userDetails.getId()).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        if (user.getRoles().contains(UserRole.ROLE_OFFICIAL) && !user.isApproved()) {
+            throw new RuntimeException("Error: Hesabınız henüz admin tarafından onaylanmamıştır.");
+        }
+
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
@@ -91,6 +97,13 @@ public class AuthService {
         }
 
         user.setRoles(roles);
+        
+        if (roles.contains(UserRole.ROLE_OFFICIAL)) {
+            user.setApproved(false);
+        } else {
+            user.setApproved(true);
+        }
+        
         userRepository.save(user);
 
         return new MessageResponse("User registered successfully!");

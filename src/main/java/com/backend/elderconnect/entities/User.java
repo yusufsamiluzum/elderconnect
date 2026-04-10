@@ -49,8 +49,9 @@ public class User {
     // Precise location data is a security risk for this demographic. 
     
     // 2. Official Organizations: Added to verify trusted users (e.g., u/city_hall)
+    // Requires Super Admin approval if user is ROLE_OFFICIAL. Default true for ROLE_USER.
     @Column(nullable = false)
-    private boolean isConfirmed = false;
+    private boolean isApproved = true;
 
     // 3. Derived Attribute: Karma is calculated on the fly, not stored as a hard column
     // @Transient tells JPA to ignore this field when creating the database table.

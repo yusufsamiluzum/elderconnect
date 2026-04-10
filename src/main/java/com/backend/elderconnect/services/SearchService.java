@@ -38,7 +38,7 @@ public class SearchService {
                             .score(post.getScore())
                             .createdAt(post.getCreatedAt())
                             .authorName(post.getAuthor().getUsername())
-                            .isOfficialAuthor(post.getAuthor().isConfirmed())
+                            .isOfficialAuthor(post.getAuthor().isApproved())
                             .commentCount((long) post.getComments().size())
                             .build())
                     .collect(Collectors.toList());

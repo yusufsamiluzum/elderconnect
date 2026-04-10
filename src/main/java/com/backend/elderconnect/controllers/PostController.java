@@ -22,6 +22,13 @@ public class PostController {
         return ResponseEntity.ok(postService.getAllPosts(sort, page, size));
     }
 
+    @GetMapping("/past-events")
+    public ResponseEntity<?> getPastPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(postService.getPastPosts(page, size));
+    }
+
     @GetMapping("/bulletin")
     public ResponseEntity<?> getBulletins(
             @RequestParam(defaultValue = "0") int page,
@@ -35,7 +42,9 @@ public class PostController {
                 postRequest.getTitle(),
                 postRequest.getContent(),
                 postRequest.getPictureUrl(),
-                postRequest.getCommunityId()
+                postRequest.getCommunityId(),
+                postRequest.getEventDate(),
+                postRequest.getLocationId()
         ));
     }
 

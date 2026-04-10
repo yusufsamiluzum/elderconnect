@@ -13,9 +13,14 @@ import java.util.List;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
-    Page<Post> findAllByCommunityIsNull(Pageable pageable);
+    @Query("SELECT p FROM Post p WHERE p.community IS NULL AND (p.eventDate IS NULL OR p.eventDate > CURRENT_TIMESTAMP)")
+    Page<Post> findActivePostsByCommunityIsNull(Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.community IS NULL AND p.eventDate <= CURRENT_TIMESTAMP")
+    Page<Post> findPastPostsByCommunityIsNull(Pageable pageable);
     
-    @Query("SELECT p FROM Post p WHERE p.author.isConfirmed = true")
+    // isConfirmed was renamed to isApproved in User.java
+    @Query("SELECT p FROM Post p WHERE p.author.isApproved = true AND (p.eventDate IS NULL OR p.eventDate > CURRENT_TIMESTAMP)")
     Page<Post> findAllBulletins(Pageable pageable);
     
     Page<Post> findByCommunity(Community community, Pageable pageable);

@@ -11,11 +11,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserProfileDTO {
+    private Long id;
     private String username;
     private String name;
     private String surname;
     private String description;
     private LocalDateTime joinedAt;
-    private boolean isConfirmed;
+    private boolean isApproved;
     private Integer karmaScore;
 }

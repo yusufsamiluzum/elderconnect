@@ -40,7 +40,7 @@ public class UserService {
                 .surname(user.getSurname())
                 .description(user.getDescription())
                 .joinedAt(user.getJoinedAt())
-                .isConfirmed(user.isConfirmed())
+                .isApproved(user.isApproved())
                 .karmaScore(calculateKarma(user))
                 .build();
     }
@@ -70,6 +70,22 @@ public class UserService {
                 .totalComments((long) comments.size())
                 .karmaScore(calculateKarma(user))
                 .build();
+    }
+
+    public java.util.Map<String, Object> getOfficialStats() {
+        String username = getCurrentUsername();
+        User user = userRepository.findByUsername(username).get();
+
+        List<Post> posts = postRepository.findByAuthor(user);
+        long totalPosts = posts.size();
+        long totalInteractions = posts.stream().mapToLong(p -> p.getComments().size() + Math.abs(p.getScore())).sum();
+        double avgScore = posts.stream().mapToInt(Post::getScore).average().orElse(0.0);
+
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+        stats.put("totalPosts", totalPosts);
+        stats.put("totalInteractions", totalInteractions);
+        stats.put("averageScorePerPost", avgScore);
+        return stats;
     }
 
     public List<PostResponseDTO> getMySavedPosts() {
@@ -132,7 +148,7 @@ public class UserService {
                 .score(post.getScore())
                 .createdAt(post.getCreatedAt())
                 .authorName(post.getAuthor().getUsername())
-                .isOfficialAuthor(post.getAuthor().isConfirmed())
+                .isOfficialAuthor(post.getAuthor().isApproved())
                 .commentCount((long) post.getComments().size())
                 .originalPostId(post.getOriginalPost() != null ? post.getOriginalPost().getId() : null)
                 .build();

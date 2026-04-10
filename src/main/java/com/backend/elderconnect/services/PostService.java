@@ -46,7 +46,12 @@ public class PostService {
                 break;
         }
 
-        return postRepository.findAllByCommunityIsNull(pageable).map(this::mapPostToDTO);
+        return postRepository.findActivePostsByCommunityIsNull(pageable).map(this::mapPostToDTO);
+    }
+
+    public Page<PostResponseDTO> getPastPosts(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("eventDate").descending());
+        return postRepository.findPastPostsByCommunityIsNull(pageable).map(this::mapPostToDTO);
     }
 
     public Page<PostResponseDTO> getBulletins(int page, int size) {
@@ -55,15 +60,20 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDTO createPost(String title, String content, String pictureUrl, Long communityId) {
+    public PostResponseDTO createPost(String title, String content, String pictureUrl, Long communityId, java.time.LocalDateTime eventDate, Long locationId) {
         String username = getCurrentUsername();
         User author = userRepository.findByUsername(username).get();
+
+        if (!author.getRoles().contains(UserRole.ROLE_OFFICIAL)) {
+            throw new RuntimeException("Error: Only official accounts can create posts.");
+        }
 
         Post post = new Post();
         post.setTitle(title);
         post.setContent(content);
         post.setPictureUrl(pictureUrl);
         post.setAuthor(author);
+        post.setEventDate(eventDate);
         post.setScore(0);
 
         if (communityId != null) {
@@ -121,14 +131,14 @@ public class PostService {
 
         if (existingVote.isPresent()) {
             PostVote vote = existingVote.get();
-            if (vote.getType() == type) {
+            if (vote.getVoteType() == type) {
                 // If clicking same vote icon again, it removes the vote
-                post.setScore(post.getScore() - vote.getType().getValue());
+                post.setScore(post.getScore() - vote.getVoteType().getValue());
                 postVoteRepository.delete(vote);
             } else {
                 // Changing from UP to DOWN or vice versa
-                post.setScore(post.getScore() - vote.getType().getValue() + type.getValue());
-                vote.setType(type);
+                post.setScore(post.getScore() - vote.getVoteType().getValue() + type.getValue());
+                vote.setVoteType(type);
                 postVoteRepository.save(vote);
             }
         } else {
@@ -136,7 +146,7 @@ public class PostService {
             PostVote vote = new PostVote();
             vote.setPost(post);
             vote.setUser(user);
-            vote.setType(type);
+            vote.setVoteType(type);
             post.setScore(post.getScore() + type.getValue());
             postVoteRepository.save(vote);
         }
@@ -160,6 +170,10 @@ public class PostService {
         
         String username = getCurrentUsername();
         User forwarder = userRepository.findByUsername(username).get();
+        if (!targetCommunity.getModerators().contains(forwarder)) {
+            throw new RuntimeException("Error: Only community admins can forward posts here.");
+        }
+
         forwardedPost.setAuthor(forwarder); 
         
         forwardedPost.setCommunity(targetCommunity);
@@ -188,7 +202,7 @@ public class PostService {
             if (currentUser != null) {
                 Optional<PostVote> vote = postVoteRepository.findByPostAndUser(post, currentUser);
                 if (vote.isPresent()) {
-                    userVote = vote.get().getType().name();
+                    userVote = vote.get().getVoteType().name();
                 }
             }
         }
@@ -201,7 +215,7 @@ public class PostService {
                 .score(post.getScore())
                 .createdAt(post.getCreatedAt())
                 .authorName(post.getAuthor().getUsername())
-                .isOfficialAuthor(post.getAuthor().isConfirmed())
+                .isOfficialAuthor(post.getAuthor().isApproved())
                 .commentCount((long) post.getComments().size())
                 .userVote(userVote)
                 .originalPostId(post.getOriginalPost() != null ? post.getOriginalPost().getId() : null)

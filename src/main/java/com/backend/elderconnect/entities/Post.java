@@ -36,6 +36,14 @@ public class Post {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "event_date")
+    private LocalDateTime eventDate;
+
+    // Etkinliğin gerçekleşeceği konum bilgisi (Plan.md'deki Location gereksinimi)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id", nullable = true)
+    private Location location;
+
     // To support the "Hot" and "Top" sorting tabs efficiently, it is best practice 
     // to store the aggregate score directly on the post rather than calculating it 
     // from scratch every time the feed loads.

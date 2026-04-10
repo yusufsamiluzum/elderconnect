@@ -33,16 +33,27 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getCommunityDetail(name));
     }
 
-    @PostMapping("/{id}/membership")
-    public ResponseEntity<?> joinCommunity(@PathVariable Long id) {
-        communityService.joinOrLeaveCommunity(id);
-        return ResponseEntity.ok(new MessageResponse("Membership updated successfully!"));
+    @PostMapping("/{id}/requests")
+    public ResponseEntity<?> requestJoinCommunity(@PathVariable Long id) {
+        communityService.requestJoinCommunity(id);
+        return ResponseEntity.ok(new MessageResponse("Join request sent successfully!"));
+    }
+
+    @GetMapping("/{id}/requests")
+    public ResponseEntity<?> getPendingRequests(@PathVariable Long id) {
+        return ResponseEntity.ok(communityService.getPendingRequests(id));
+    }
+
+    @PutMapping("/{id}/requests/{requestId}")
+    public ResponseEntity<?> handleJoinRequest(@PathVariable Long id, @PathVariable Long requestId, @RequestParam boolean approved) {
+        communityService.handleJoinRequest(id, requestId, approved);
+        return ResponseEntity.ok(new MessageResponse("Join request handled successfully!"));
     }
 
     @DeleteMapping("/{id}/membership")
     public ResponseEntity<?> leaveCommunity(@PathVariable Long id) {
-        communityService.joinOrLeaveCommunity(id);
-        return ResponseEntity.ok(new MessageResponse("Membership updated successfully!"));
+        communityService.leaveCommunity(id);
+        return ResponseEntity.ok(new MessageResponse("Membership removed successfully!"));
     }
 
     @GetMapping("/{id}/posts")

@@ -110,19 +110,19 @@ public class CommentService {
 
         if (existingVote.isPresent()) {
             CommentVote vote = existingVote.get();
-            if (vote.getType() == type) {
-                comment.setScore(comment.getScore() - vote.getType().getValue());
+            if (vote.getVoteType() == type) {
+                comment.setScore(comment.getScore() - vote.getVoteType().getValue());
                 commentVoteRepository.delete(vote);
             } else {
-                comment.setScore(comment.getScore() - vote.getType().getValue() + type.getValue());
-                vote.setType(type);
+                comment.setScore(comment.getScore() - vote.getVoteType().getValue() + type.getValue());
+                vote.setVoteType(type);
                 commentVoteRepository.save(vote);
             }
         } else {
             CommentVote vote = new CommentVote();
             vote.setComment(comment);
             vote.setUser(user);
-            vote.setType(type);
+            vote.setVoteType(type);
             comment.setScore(comment.getScore() + type.getValue());
             commentVoteRepository.save(vote);
         }
@@ -150,7 +150,7 @@ public class CommentService {
             if (currentUser != null) {
                 Optional<CommentVote> vote = commentVoteRepository.findByCommentAndUser(comment, currentUser);
                 if (vote.isPresent()) {
-                    userVote = vote.get().getType().name();
+                    userVote = vote.get().getVoteType().name();
                 }
             }
         }
