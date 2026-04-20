@@ -27,15 +27,23 @@ public class RefreshTokenService {
         return refreshTokenRepository.findByToken(token);
     }
 
+    @Transactional
     public RefreshToken createRefreshToken(Long userId) {
-        RefreshToken refreshToken = new RefreshToken();
+        com.backend.elderconnect.entities.User user = userRepository.findById(userId).get();
+        Optional<RefreshToken> existingToken = refreshTokenRepository.findByUser(user);
+        
+        RefreshToken refreshToken;
+        if (existingToken.isPresent()) {
+            refreshToken = existingToken.get();
+        } else {
+            refreshToken = new RefreshToken();
+            refreshToken.setUser(user);
+        }
 
-        refreshToken.setUser(userRepository.findById(userId).get());
-        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs * 2)); // Refresh token lasts twice as long as JWT for simplicity
+        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs * 2));
         refreshToken.setToken(UUID.randomUUID().toString());
 
-        refreshToken = refreshTokenRepository.save(refreshToken);
-        return refreshToken;
+        return refreshTokenRepository.save(refreshToken);
     }
 
     public RefreshToken verifyExpiration(RefreshToken token) {

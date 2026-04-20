@@ -1,13 +1,14 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
 import '../global.css';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { getToken } from '../utils/auth';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -48,6 +49,37 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const segments = useSegments();
+  const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const token = await getToken();
+        const inAuthGroup = segments[0] === 'login';
+
+        if (!token && !inAuthGroup) {
+          // Eğer token yoksa ve login sayfasında değilsek login'e at
+          router.replace('/login');
+        } else if (token && inAuthGroup) {
+          // Eğer token varsa ve login sayfasındaysak içeri at
+          router.replace('/');
+        }
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setIsReady(true);
+      }
+    }
+    
+    // Küçük bir bekleme ile router'ın hazır olmasını sağlıyoruz
+    const timeout = setTimeout(() => {
+      checkAuth();
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, [segments]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

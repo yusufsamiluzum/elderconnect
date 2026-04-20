@@ -1,39 +1,87 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LogIn, UserPlus } from 'lucide-react-native';
+import { api } from '../utils/api';
+import { saveTokens } from '../utils/auth';
 
 export default function LoginScreen() {
   const [isLogin, setIsLogin] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  // Consolidated form data
   const [formData, setFormData] = useState({
     username: "",
     email: "",
-    birthYear: "",
     password: "",
     confirmPassword: "",
   });
 
   const handleChange = (name: string, value: string) => {
     setFormData({ ...formData, [name]: value });
+    if (errorMsg) setErrorMsg("");
   };
 
-  const handleSubmit = () => {
-    if (!isLogin && formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+  const handleSubmit = async () => {
+    setErrorMsg("");
+
+    if (!formData.username || !formData.password) {
+      setErrorMsg("Kullanıcı adı ve şifre zorunludur.");
       return;
     }
-    
-    if (isLogin) {
-      console.log("Login:", { email: formData.email, password: formData.password });
-    } else {
-      console.log("Register:", formData);
+
+    if (!isLogin) {
+      if (!formData.email) {
+        setErrorMsg("E-posta adresi zorunludur.");
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setErrorMsg("Şifreler uyuşmuyor!");
+        return;
+      }
     }
     
-    // Navigate to root tab (Feed context)
-    router.replace('/(tabs)/');
+    setIsLoading(true);
+
+    try {
+      if (isLogin) {
+        // LOGIN REQUEST
+        const response = await api.post('/auth/login', {
+          username: formData.username.trim(),
+          password: formData.password
+        });
+        
+        const data = response.data;
+        if (data.token) {
+          // Save JWT tokens
+          await saveTokens(data.token, data.refreshToken);
+          console.log("Logged in successfully!", data);
+          // Navigate to home feed
+          router.replace('/');
+        }
+      } else {
+        // REGISTER REQUEST
+        const response = await api.post('/auth/register', {
+          username: formData.username.trim(),
+          email: formData.email.trim(),
+          password: formData.password
+        });
+        
+        console.log("Registered successfully:", response.data);
+        Alert.alert("Başarılı", "Hesabınız oluşturuldu. Lütfen giriş yapın.");
+        setIsLogin(true); // Switch to login screen natively
+      }
+    } catch (error: any) {
+      console.error("Auth error:", error);
+      if (error.response && error.response.data && error.response.data.message) {
+        setErrorMsg(error.response.data.message);
+      } else {
+        setErrorMsg("Bağlantı hatası oluştu. Lütfen sunucu ayarlarınızı kontrol edin.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -50,77 +98,74 @@ export default function LoginScreen() {
               <Text className="text-white text-3xl font-bold">E</Text>
             </View>
             <Text className="text-3xl font-bold text-foreground">
-              {isLogin ? "Welcome Back" : "Create Account"}
+              {isLogin ? "Tekrar Hoş Geldiniz" : "Hesap Oluşturun"}
             </Text>
             <Text className="text-muted-foreground mt-2 text-center text-lg">
-              {isLogin ? "Sign in to your account to continue" : "Join our community today"}
+              {isLogin ? "Devam etmek için giriş yapın" : "Topluluğumuza bugün katılın"}
             </Text>
           </View>
 
           {/* Form */}
           <View className="bg-card border border-border p-6 rounded-xl shadow-sm mb-6">
             
-            {!isLogin && (
-              <View className="mb-4">
-                <Text className="text-foreground font-medium mb-1.5">Username</Text>
-                <TextInput
-                  value={formData.username}
-                  onChangeText={(val) => handleChange("username", val)}
-                  placeholder="Choose a username"
-                  placeholderTextColor="hsl(var(--muted-foreground))"
-                  className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
-                />
+            {errorMsg ? (
+              <View className="bg-red-500/10 p-3 rounded-lg border border-red-500/20 mb-4">
+                <Text className="text-red-500 text-sm text-center">{errorMsg}</Text>
               </View>
-            )}
+            ) : null}
 
             <View className="mb-4">
-              <Text className="text-foreground font-medium mb-1.5">Email Address</Text>
+              <Text className="text-foreground font-medium mb-1.5">Kullanıcı Adı</Text>
               <TextInput
-                value={formData.email}
-                onChangeText={(val) => handleChange("email", val)}
-                placeholder="your.email@example.com"
+                value={formData.username}
+                onChangeText={(val) => handleChange("username", val)}
+                placeholder="Kullanıcı adınızı girin (örn. ahmet_amca)"
                 placeholderTextColor="hsl(var(--muted-foreground))"
-                keyboardType="email-address"
                 autoCapitalize="none"
+                editable={!isLoading}
                 className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
               />
             </View>
 
             {!isLogin && (
               <View className="mb-4">
-                <Text className="text-foreground font-medium mb-1.5">Birth Year</Text>
+                <Text className="text-foreground font-medium mb-1.5">E-posta Adresi</Text>
                 <TextInput
-                  value={formData.birthYear}
-                  onChangeText={(val) => handleChange("birthYear", val)}
-                  placeholder="1950"
+                  value={formData.email}
+                  onChangeText={(val) => handleChange("email", val)}
+                  placeholder="ornek@email.com"
                   placeholderTextColor="hsl(var(--muted-foreground))"
-                  keyboardType="numeric"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  editable={!isLoading}
                   className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
                 />
               </View>
             )}
 
             <View className="mb-4">
-              <Text className="text-foreground font-medium mb-1.5">Password</Text>
+              <Text className="text-foreground font-medium mb-1.5">Şifre</Text>
               <TextInput
                 value={formData.password}
                 onChangeText={(val) => handleChange("password", val)}
                 placeholder="••••••••"
                 placeholderTextColor="hsl(var(--muted-foreground))"
                 secureTextEntry
+                editable={!isLoading}
                 className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
               />
             </View>
 
             {!isLogin && (
               <View className="mb-4">
-                <Text className="text-foreground font-medium mb-1.5">Confirm Password</Text>
+                <Text className="text-foreground font-medium mb-1.5">Şifre Tekrar</Text>
                 <TextInput
                   value={formData.confirmPassword}
                   onChangeText={(val) => handleChange("confirmPassword", val)}
                   placeholder="••••••••"
                   placeholderTextColor="hsl(var(--muted-foreground))"
                   secureTextEntry
+                  editable={!isLoading}
                   className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
                 />
               </View>
@@ -128,40 +173,43 @@ export default function LoginScreen() {
 
             {isLogin && (
               <View className="flex-row items-center justify-end mb-4">
-                <TouchableOpacity>
-                  <Text className="text-accent font-medium">Forgot password?</Text>
+                <TouchableOpacity disabled={isLoading}>
+                  <Text className="text-accent font-medium">Şifremi unuttum?</Text>
                 </TouchableOpacity>
               </View>
             )}
 
             <TouchableOpacity
               onPress={handleSubmit}
-              className="w-full bg-accent py-4 rounded-lg flex-row justify-center items-center gap-2 mb-6"
+              disabled={isLoading}
+              className={`w-full py-4 rounded-lg flex-row justify-center items-center gap-2 mb-6 ${isLoading ? 'bg-accent/50' : 'bg-accent'}`}
             >
-              {isLogin ? (
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : isLogin ? (
                 <LogIn size={20} color="#fff" />
               ) : (
                 <UserPlus size={20} color="#fff" />
               )}
               <Text className="text-white font-bold text-lg">
-                {isLogin ? 'Sign In' : 'Create Account'}
+                {isLoading ? (isLogin ? 'Giriş Yapılıyor...' : 'Kaydediliyor...') : isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
               </Text>
             </TouchableOpacity>
 
             <View className="flex-row items-center justify-center gap-2">
               <Text className="text-muted-foreground text-center text-base">
-                {isLogin ? "Don't have an account?" : "Already have an account?"}
+                {isLogin ? "Hesabınız yok mu?" : "Zaten bir hesabınız var mı?"}
               </Text>
-              <TouchableOpacity onPress={() => setIsLogin(!isLogin)}>
+              <TouchableOpacity onPress={() => { setIsLogin(!isLogin); setErrorMsg(""); }} disabled={isLoading}>
                 <Text className="text-accent font-bold text-base">
-                  {isLogin ? 'Sign up' : 'Sign in'}
+                  {isLogin ? 'Kayıt Ol' : 'Giriş Yap'}
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <Text className="text-center text-muted-foreground text-sm px-4">
-            By {isLogin ? 'signing in' : 'registering'}, you agree to our Terms of Service and Privacy Policy
+            {isLogin ? 'Giriş yaparak' : 'Kayıt olarak'}, Kullanım Şartları ve Gizlilik Politikamızı kabul etmiş olursunuz.
           </Text>
 
         </ScrollView>
