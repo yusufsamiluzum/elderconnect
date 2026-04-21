@@ -37,6 +37,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserProfile(username));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyProfile() {
+        return ResponseEntity.ok(userService.getMyProfile());
+    }
+
     @PutMapping("/me")
     public ResponseEntity<?> updateMyProfile(@Valid @RequestBody ProfileUpdateDTO updateDTO) {
         return ResponseEntity.ok(userService.updateMyProfile(updateDTO));

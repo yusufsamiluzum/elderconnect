@@ -15,6 +15,7 @@ public class UserProfileDTO {
     private String username;
     private String name;
     private String surname;
+    private String city;
     private String description;
     private LocalDateTime joinedAt;
     private boolean isApproved;

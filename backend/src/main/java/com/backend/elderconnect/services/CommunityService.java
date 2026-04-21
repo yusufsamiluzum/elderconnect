@@ -77,6 +77,12 @@ public class CommunityService {
         return mapCommunityToDTO(community);
     }
 
+    public CommunityResponseDTO getCommunityById(Long id) {
+        Community community = communityRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Error: Community not found."));
+        return mapCommunityToDTO(community);
+    }
+
     @Transactional
     public void requestJoinCommunity(Long id) {
         String username = getCurrentUsername();

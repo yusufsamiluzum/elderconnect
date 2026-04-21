@@ -75,6 +75,10 @@ public class AuthService {
         user.setUsername(signUpRequest.getUsername());
         user.setEmail(signUpRequest.getEmail());
         user.setPasswordHash(encoder.encode(signUpRequest.getPassword()));
+        
+        if (signUpRequest.getName() != null) user.setName(signUpRequest.getName());
+        if (signUpRequest.getSurname() != null) user.setSurname(signUpRequest.getSurname());
+        if (signUpRequest.getCity() != null) user.setCity(signUpRequest.getCity());
 
         Set<String> strRoles = signUpRequest.getRole();
         Set<UserRole> roles = new HashSet<>();

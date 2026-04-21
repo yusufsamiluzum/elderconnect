@@ -4,16 +4,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { LogIn, UserPlus } from 'lucide-react-native';
 import { api } from '../utils/api';
-import { saveTokens } from '../utils/auth';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen() {
+  const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const [formData, setFormData] = useState({
     username: "",
+    name: "",
+    surname: "",
     email: "",
+    city: "",
     password: "",
     confirmPassword: "",
   });
@@ -32,6 +36,10 @@ export default function LoginScreen() {
     }
 
     if (!isLogin) {
+      if (!formData.name || !formData.surname) {
+        setErrorMsg("Ad ve soyad zorunludur.");
+        return;
+      }
       if (!formData.email) {
         setErrorMsg("E-posta adresi zorunludur.");
         return;
@@ -54,16 +62,17 @@ export default function LoginScreen() {
         
         const data = response.data;
         if (data.token) {
-          // Save JWT tokens
-          await saveTokens(data.token, data.refreshToken);
-          console.log("Logged in successfully!", data);
-          // Navigate to home feed
-          router.replace('/');
+          // Use Context's logic, it saves the token and fetches the user object
+          // Navigation is automatically handled by _layout.tsx once user object is set
+          await login(data.token, data.refreshToken);
+          console.log("Logged in successfully!");
         }
       } else {
         // REGISTER REQUEST
         const response = await api.post('/auth/register', {
           username: formData.username.trim(),
+          name: formData.name.trim(),
+          surname: formData.surname.trim(),
           email: formData.email.trim(),
           password: formData.password
         });
@@ -128,19 +137,56 @@ export default function LoginScreen() {
             </View>
 
             {!isLogin && (
-              <View className="mb-4">
-                <Text className="text-foreground font-medium mb-1.5">E-posta Adresi</Text>
-                <TextInput
-                  value={formData.email}
-                  onChangeText={(val) => handleChange("email", val)}
-                  placeholder="ornek@email.com"
-                  placeholderTextColor="hsl(var(--muted-foreground))"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  editable={!isLoading}
-                  className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
-                />
-              </View>
+              <>
+                <View className="flex-row gap-4 mb-4">
+                  <View className="flex-1">
+                    <Text className="text-foreground font-medium mb-1.5">Ad</Text>
+                    <TextInput
+                      value={formData.name}
+                      onChangeText={(val) => handleChange("name", val)}
+                      placeholder="Adınız"
+                      placeholderTextColor="hsl(var(--muted-foreground))"
+                      editable={!isLoading}
+                      className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-foreground font-medium mb-1.5">Soyad</Text>
+                    <TextInput
+                      value={formData.surname}
+                      onChangeText={(val) => handleChange("surname", val)}
+                      placeholder="Soyadınız"
+                      placeholderTextColor="hsl(var(--muted-foreground))"
+                      editable={!isLoading}
+                      className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
+                    />
+                  </View>
+                </View>
+                <View className="mb-4">
+                  <Text className="text-foreground font-medium mb-1.5">Şehir</Text>
+                  <TextInput
+                    value={formData.city}
+                    onChangeText={(val) => handleChange("city", val)}
+                    placeholder="Yaşadığınız Şehir"
+                    placeholderTextColor="hsl(var(--muted-foreground))"
+                    editable={!isLoading}
+                    className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
+                  />
+                </View>
+                <View className="mb-4">
+                  <Text className="text-foreground font-medium mb-1.5">E-posta Adresi</Text>
+                  <TextInput
+                    value={formData.email}
+                    onChangeText={(val) => handleChange("email", val)}
+                    placeholder="ornek@email.com"
+                    placeholderTextColor="hsl(var(--muted-foreground))"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    editable={!isLoading}
+                    className="w-full p-4 bg-input/50 border border-border rounded-lg text-foreground"
+                  />
+                </View>
+              </>
             )}
 
             <View className="mb-4">

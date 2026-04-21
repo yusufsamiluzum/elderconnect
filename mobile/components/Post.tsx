@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, TextInput, Image } from "react-native";
+import { View, Text, TouchableOpacity, TextInput, Image, Alert } from "react-native";
 import { ArrowUp, ArrowDown, MessageSquare, Share2, MoreVertical } from "lucide-react-native";
 import { Comment } from "./Comment";
+import { api } from "../utils/api";
 
 interface PostProps {
   id: string;
@@ -18,7 +19,8 @@ interface PostProps {
 }
 
 export function Post({ id, author, authorRole, community, title, content, image, upvotes, downvotes, commentCount, timestamp }: PostProps) {
-  const [userVote, setUserVote] = useState<"up" | "down" | null>(null);
+  const [userVote, setUserVote] = useState<"UPVOTE" | "DOWNVOTE" | null>(null);
+  const [currentScore, setCurrentScore] = useState(upvotes - downvotes);
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [comments, setComments] = useState([
@@ -32,11 +34,25 @@ export function Post({ id, author, authorRole, community, title, content, image,
     },
   ]);
 
-  const handleVote = (type: "up" | "down") => {
-    if (userVote === type) {
-      setUserVote(null);
-    } else {
-      setUserVote(type);
+  const handleVote = async (type: "UPVOTE" | "DOWNVOTE") => {
+    try {
+      // If clicking same vote, currently backend doesn't support "unvote" easily with one endpoint
+      // for now we just send the vote.
+      await api.post(`/posts/${id}/vote`, { type });
+      
+      // Optimistic UI update
+      if (userVote !== type) {
+        if (type === "UPVOTE") {
+          setCurrentScore(prev => prev + (userVote === "DOWNVOTE" ? 2 : 1));
+          setUserVote("UPVOTE");
+        } else {
+          setCurrentScore(prev => prev - (userVote === "UPVOTE" ? 2 : 1));
+          setUserVote("DOWNVOTE");
+        }
+      }
+    } catch (err) {
+      console.error("Vot sisteminde hata:", err);
+      Alert.alert("Hata", "Beğeni işlemi başarısız oldu.");
     }
   };
 
@@ -50,27 +66,25 @@ export function Post({ id, author, authorRole, community, title, content, image,
           content: newComment,
           upvotes: 0,
           downvotes: 0,
-          timestamp: "Just now",
+          timestamp: "Az önce",
         },
       ]);
       setNewComment("");
     }
   };
 
-  const score = upvotes - downvotes + (userVote === "up" ? 1 : userVote === "down" ? -1 : 0);
-
   const renderRoleBadge = () => {
     if (authorRole === "official") {
       return (
         <View className="px-1.5 py-0.5 bg-accent rounded ml-2">
-          <Text className="text-[10px] text-white">Official</Text>
+          <Text className="text-[10px] text-white">Resmi</Text>
         </View>
       );
     }
     if (authorRole === "super_admin") {
       return (
         <View className="px-1.5 py-0.5 bg-destructive rounded ml-2">
-          <Text className="text-[10px] text-white">Admin</Text>
+          <Text className="text-[10px] text-white">Yönetici</Text>
         </View>
       );
     }
@@ -82,22 +96,22 @@ export function Post({ id, author, authorRole, community, title, content, image,
       <View className="flex-row p-4 gap-3">
         <View className="items-center gap-1 pt-1">
           <TouchableOpacity
-            onPress={() => handleVote("up")}
-            className={`p-1.5 rounded-md ${userVote === "up" ? "bg-accent" : "bg-transparent"}`}
+            onPress={() => handleVote("UPVOTE")}
+            className={`p-1.5 rounded-md ${userVote === "UPVOTE" ? "bg-accent" : "bg-transparent"}`}
           >
             <ArrowUp 
               size={20} 
-              color={userVote === "up" ? "#fff" : "hsl(var(--muted-foreground))"} 
+              color={userVote === "UPVOTE" ? "#fff" : "hsl(var(--muted-foreground))"} 
             />
           </TouchableOpacity>
-          <Text className="text-base text-foreground font-medium">{score}</Text>
+          <Text className="text-base text-foreground font-medium">{currentScore}</Text>
           <TouchableOpacity
-            onPress={() => handleVote("down")}
-            className={`p-1.5 rounded-md ${userVote === "down" ? "bg-secondary" : "bg-transparent"}`}
+            onPress={() => handleVote("DOWNVOTE")}
+            className={`p-1.5 rounded-md ${userVote === "DOWNVOTE" ? "bg-secondary" : "bg-transparent"}`}
           >
             <ArrowDown 
               size={20} 
-              color={userVote === "down" ? "#fff" : "hsl(var(--muted-foreground))"} 
+              color={userVote === "DOWNVOTE" ? "#fff" : "hsl(var(--muted-foreground))"} 
             />
           </TouchableOpacity>
         </View>
@@ -110,7 +124,7 @@ export function Post({ id, author, authorRole, community, title, content, image,
               </Text>
             )}
             <View className="flex-row items-center">
-              <Text className="text-xs text-foreground">Posted by u/{author}</Text>
+              <Text className="text-xs text-foreground">Gönderen: u/{author}</Text>
               {renderRoleBadge()}
             </View>
             <Text className="text-muted-foreground text-xs ml-1">• {timestamp}</Text>
@@ -137,11 +151,11 @@ export function Post({ id, author, authorRole, community, title, content, image,
               className="px-3 py-1.5 bg-muted rounded-md flex-row items-center gap-1.5"
             >
               <MessageSquare size={18} color="hsl(var(--foreground))" />
-              <Text className="text-foreground text-sm font-medium">{commentCount} Comments</Text>
+              <Text className="text-foreground text-sm font-medium">{commentCount} Yorum</Text>
             </TouchableOpacity>
             <TouchableOpacity className="px-3 py-1.5 bg-muted rounded-md flex-row items-center gap-1.5">
               <Share2 size={18} color="hsl(var(--foreground))" />
-              <Text className="text-foreground text-sm font-medium">Share</Text>
+              <Text className="text-foreground text-sm font-medium">Paylaş</Text>
             </TouchableOpacity>
           </View>
 
@@ -151,7 +165,7 @@ export function Post({ id, author, authorRole, community, title, content, image,
                 <TextInput
                   value={newComment}
                   onChangeText={setNewComment}
-                  placeholder="Add a comment..."
+                  placeholder="Yorum yapın..."
                   placeholderTextColor="hsl(var(--muted-foreground))"
                   className="w-full p-3 bg-input/50 border border-border rounded-lg text-foreground mb-2"
                   multiline
@@ -161,7 +175,7 @@ export function Post({ id, author, authorRole, community, title, content, image,
                   onPress={handleAddComment}
                   className="px-4 py-2 bg-accent rounded-lg self-start"
                 >
-                  <Text className="text-white font-medium">Comment</Text>
+                  <Text className="text-white font-medium">Yorum Yap</Text>
                 </TouchableOpacity>
               </View>
 

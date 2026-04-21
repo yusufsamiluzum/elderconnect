@@ -33,6 +33,11 @@ public class CommunityController {
         return ResponseEntity.ok(communityService.getCommunityDetail(name));
     }
 
+    @GetMapping("/{id:[0-9]+}")
+    public ResponseEntity<?> getCommunityById(@PathVariable Long id) {
+        return ResponseEntity.ok(communityService.getCommunityById(id));
+    }
+
     @PostMapping("/{id}/requests")
     public ResponseEntity<?> requestJoinCommunity(@PathVariable Long id) {
         communityService.requestJoinCommunity(id);

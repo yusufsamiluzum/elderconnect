@@ -8,7 +8,7 @@ import 'react-native-reanimated';
 import '../global.css';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { getToken } from '../utils/auth';
+import { AuthProvider, useAuth } from '../context/AuthContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -44,42 +44,32 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const segments = useSegments();
   const router = useRouter();
-  const [isReady, setIsReady] = useState(false);
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    async function checkAuth() {
-      try {
-        const token = await getToken();
-        const inAuthGroup = segments[0] === 'login';
+    if (isLoading) return; // Wait until context finishes fetching user
 
-        if (!token && !inAuthGroup) {
-          // Eğer token yoksa ve login sayfasında değilsek login'e at
-          router.replace('/login');
-        } else if (token && inAuthGroup) {
-          // Eğer token varsa ve login sayfasındaysak içeri at
-          router.replace('/');
-        }
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        setIsReady(true);
-      }
+    const inAuthGroup = segments[0] === 'login';
+
+    if (!user && !inAuthGroup) {
+      // Eğer kullanıcı (token/profil) yoksa ve login sayfasında değilsek login'e at
+      router.replace('/login');
+    } else if (user && inAuthGroup) {
+      // Eğer kullanıcı varsa ve login sayfasındaysak içeri at
+      router.replace('/');
     }
-    
-    // Küçük bir bekleme ile router'ın hazır olmasını sağlıyoruz
-    const timeout = setTimeout(() => {
-      checkAuth();
-    }, 100);
-
-    return () => clearTimeout(timeout);
-  }, [segments]);
+  }, [user, isLoading, segments]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>

@@ -1,57 +1,62 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Users, Bell, Settings, Lock, Globe, ArrowLeft } from 'lucide-react-native';
+import { Users, Bell, Settings, Lock, Globe, ArrowLeft, Plus } from 'lucide-react-native';
 import { Post } from '../../components/Post';
+import { api } from '../../utils/api';
 
 export default function CommunityDetailScreen() {
   const { id } = useLocalSearchParams();
+  const [community, setCommunity] = useState<any>(null);
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const community = {
-    id: id || "1",
-    name: "satranc-meraklilar",
-    description: "Satranç oyununu sevenler için. Stratejiler, bulmacalar ve oyun tartışmaları paylaşın",
-    members: 1823,
-    posts: 567,
-    type: "public" as const,
-    isOfficial: false,
-    isMember: true,
-    rules: [
-      "Tüm üyelere saygılı olun",
-      "Spam veya kendi reklamını yapmak yasaktır",
-      "Gönderileri satranç ile ilgili tutun",
-      "Yeni başlayanlara oyunu öğrenmelerinde yardımcı olun",
-    ],
-    moderators: ["satranc_ustasi", "strateji_uzmani"],
+  const fetchCommunityData = async () => {
+    setIsLoading(true);
+    try {
+      const commRes = await api.get(`/communities/${id}`);
+      setCommunity(commRes.data);
+      
+      const postsRes = await api.get(`/communities/${id}/posts`);
+      setPosts(postsRes.data);
+    } catch (err) {
+      console.error("Topluluk verileri alınamadı:", err);
+      Alert.alert("Hata", "Topluluk bilgileri yüklenemedi.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const communityPosts = [
-    {
-      id: "1",
-      author: "satranc_ustasi",
-      authorRole: "standard" as const,
-      community: community.name,
-      title: "Günlük Satranç Bulmacası - 3 Hamlede Şah Mat",
-      content: "İşte bugünün bulmacası! Hamle sırası beyazda ve 3 hamlede şah mat. Çözümü bulabiliyor musunuz? Cevabı yarın yorumlarda paylaşacağım.",
-      upvotes: 34,
-      downvotes: 1,
-      commentCount: 12,
-      timestamp: "4 saat önce",
-    },
-    {
-      id: "2",
-      author: "piyon_oyuncusu",
-      authorRole: "standard" as const,
-      community: community.name,
-      title: "İlk turnuva maçımı kazandım!",
-      content: "Aylarca süren pratik ve açılış çalışmalarından sonra bugün nihayet ilk turnuva maçımı kazandım. Sicilya Savunması gerçekten işe yaradı! Tavsiye ve desteğiniz için hepinize teşekkür ederim.",
-      upvotes: 89,
-      downvotes: 0,
-      commentCount: 24,
-      timestamp: "8 saat önce",
-    },
-  ];
+  useEffect(() => {
+    fetchCommunityData();
+  }, [id]);
+
+  const handleJoin = async () => {
+    try {
+      await api.post(`/communities/${id}/requests`);
+      Alert.alert("Başarılı", community.type === "PRIVATE" ? "Katılma isteği gönderildi." : "Topluluğa katıldınız.");
+      fetchCommunityData();
+    } catch (err: any) {
+      Alert.alert("Hata", err.response?.data?.message || "İşlem başarısız.");
+    }
+  };
+
+  if (isLoading && !community) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <ActivityIndicator size="large" color="hsl(var(--accent))" />
+      </View>
+    );
+  }
+
+  if (!community) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <Text className="text-foreground">Topluluk bulunamadı.</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-background">
@@ -70,7 +75,7 @@ export default function CommunityDetailScreen() {
             <View className="flex-1 pr-4">
               <View className="flex-row items-center gap-2 mb-2">
                 <View className="w-12 h-12 bg-accent/20 rounded-full items-center justify-center">
-                  {community.type === "private" ? (
+                  {community.type === "PRIVATE" ? (
                     <Lock size={20} color="hsl(var(--secondary))" />
                   ) : (
                     <Globe size={20} color="hsl(var(--accent))" />
@@ -78,7 +83,9 @@ export default function CommunityDetailScreen() {
                 </View>
                 <View>
                   <Text className="text-lg font-bold text-foreground">c/{community.name}</Text>
-                  <Text className="text-accent text-xs capitalize">{community.type} Community</Text>
+                  <Text className="text-accent text-xs">
+                    {community.type === "PRIVATE" ? "Gizli Topluluk" : "Açık Topluluk"}
+                  </Text>
                 </View>
               </View>
               <Text className="text-foreground/80 mt-2 leading-5">{community.description}</Text>
@@ -86,19 +93,21 @@ export default function CommunityDetailScreen() {
           </View>
 
           <View className="flex-row flex-wrap gap-2 mb-4">
-            {community.isMember ? (
+            {community.isUserMember ? (
               <>
-                <TouchableOpacity className="flex-1 py-2 bg-accent/10 border border-accent/20 rounded-lg flex-row items-center justify-center gap-2">
-                  <Bell size={18} color="hsl(var(--accent))" />
-                  <Text className="text-accent font-medium">Subscribed</Text>
-                </TouchableOpacity>
-                <TouchableOpacity className="p-2 bg-secondary/10 border border-secondary/20 rounded-lg justify-center">
-                  <Settings size={20} color="hsl(var(--secondary))" />
+                <View className="flex-1 py-2 bg-secondary/10 border border-secondary/20 rounded-lg flex-row items-center justify-center gap-2">
+                  <Users size={18} color="hsl(var(--secondary))" />
+                  <Text className="text-secondary font-medium">Üyesiniz</Text>
+                </View>
+                <TouchableOpacity className="p-2 bg-muted border border-border rounded-lg justify-center">
+                  <Settings size={20} color="hsl(var(--muted-foreground))" />
                 </TouchableOpacity>
               </>
             ) : (
-              <TouchableOpacity className="flex-1 py-2 bg-accent rounded-lg items-center">
-                <Text className="text-white font-medium">Join Community</Text>
+              <TouchableOpacity onPress={handleJoin} className="flex-1 py-3 bg-accent rounded-lg items-center">
+                <Text className="text-white font-bold text-base">
+                  {community.type === "PRIVATE" ? "Katılma İsteği Gönder" : "Topluluğa Katıl"}
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -106,53 +115,45 @@ export default function CommunityDetailScreen() {
           <View className="flex-row items-center gap-6 pt-3 border-t border-border/50">
             <View className="flex-row items-center gap-1.5">
               <Users size={16} color="hsl(var(--muted-foreground))" />
-              <Text className="text-muted-foreground font-medium">{community.members.toLocaleString()} members</Text>
+              <Text className="text-muted-foreground font-medium">{community.memberCount} üye</Text>
             </View>
-            <Text className="text-muted-foreground font-medium">{community.posts} posts</Text>
           </View>
         </View>
 
         {/* Post Composition Trigger */}
-        {community.isMember && (
-          <TouchableOpacity className="w-full bg-accent py-3 rounded-lg flex-row items-center justify-center mb-6 shadow-sm">
-            <Text className="text-white font-bold text-base">Create Post in c/{community.name}</Text>
+        {community.isUserMember && (
+          <TouchableOpacity 
+             onPress={() => router.push({ pathname: '/', params: { openCreate: 'true', communityId: id } })}
+             className="w-full bg-accent py-3 rounded-lg flex-row items-center justify-center mb-6 shadow-sm"
+          >
+            <Plus size={20} color="#fff" />
+            <Text className="text-white font-bold text-base ml-2">c/{community.name} içinde paylaş</Text>
           </TouchableOpacity>
         )}
 
-        {/* Rules & Info block */}
-        <View className="bg-card border border-border rounded-lg p-5 mb-6">
-          <Text className="text-lg font-bold text-foreground mb-3">Community Rules</Text>
-          <View className="space-y-3">
-            {community.rules.map((rule, index) => (
-              <View key={index} className="flex-row gap-3">
-                <Text className="text-muted-foreground font-bold">{index + 1}.</Text>
-                <Text className="text-foreground flex-1 leading-5">{rule}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        <View className="bg-card border border-border rounded-lg p-5 mb-6">
-          <Text className="text-lg font-bold text-foreground mb-3">Moderators</Text>
-          <View className="space-y-3">
-            {community.moderators.map((mod) => (
-              <TouchableOpacity key={mod} className="flex-row items-center gap-2">
-                <View className="w-8 h-8 rounded-full bg-accent/20 items-center justify-center">
-                  <Users size={14} color="hsl(var(--accent))" />
-                </View>
-                <Text className="text-accent font-medium">u/{mod}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <Text className="text-lg font-bold text-foreground items-center mb-4 ml-1">Recent Posts</Text>
+        <Text className="text-lg font-bold text-foreground mb-4 ml-1">Son Gönderiler</Text>
         
         {/* Posts */}
         <View className="pb-8">
-          {communityPosts.map((post) => (
-            <Post key={post.id} {...post} />
-          ))}
+          {posts.length > 0 ? (
+            posts.map((post: any) => (
+              <Post 
+                key={post.id} 
+                id={post.id}
+                author={post.authorName}
+                authorRole={post.isOfficialAuthor ? "official" : "standard"}
+                title={post.title}
+                content={post.content}
+                image={post.pictureUrl}
+                upvotes={post.score}
+                downvotes={0}
+                commentCount={post.commentCount}
+                timestamp={new Date(post.createdAt).toLocaleDateString('tr-TR')}
+              />
+            ))
+          ) : (
+             <Text className="text-center text-muted-foreground py-10">Henüz gönderi yok.</Text>
+          )}
         </View>
 
       </ScrollView>

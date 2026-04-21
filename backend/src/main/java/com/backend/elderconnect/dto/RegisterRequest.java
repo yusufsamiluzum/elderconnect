@@ -15,6 +15,15 @@ public class RegisterRequest {
     @Email
     private String email;
 
+    @Size(max = 50)
+    private String name;
+
+    @Size(max = 50)
+    private String surname;
+
+    @Size(max = 50)
+    private String city;
+
     private Set<String> role;
 
     @NotBlank

@@ -36,6 +36,9 @@ public class User {
     @Column(name = "last_name", length = 50)
     private String surname;
 
+    @Column(length = 50)
+    private String city;
+
     @Column(length = 500)
     private String description;
 

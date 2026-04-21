@@ -38,11 +38,16 @@ public class UserService {
                 .username(user.getUsername())
                 .name(user.getName())
                 .surname(user.getSurname())
+                .city(user.getCity())
                 .description(user.getDescription())
                 .joinedAt(user.getJoinedAt())
                 .isApproved(user.isApproved())
                 .karmaScore(calculateKarma(user))
                 .build();
+    }
+
+    public UserProfileDTO getMyProfile() {
+        return getUserProfile(getCurrentUsername());
     }
 
     @Transactional
@@ -52,6 +57,7 @@ public class UserService {
 
         if (updateDTO.getName() != null) user.setName(updateDTO.getName());
         if (updateDTO.getSurname() != null) user.setSurname(updateDTO.getSurname());
+        if (updateDTO.getCity() != null) user.setCity(updateDTO.getCity());
         if (updateDTO.getDescription() != null) user.setDescription(updateDTO.getDescription());
 
         user = userRepository.save(user);
