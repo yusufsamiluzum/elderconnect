@@ -57,10 +57,10 @@ export default function CommunitiesScreen() {
     }
   };
 
-  const handleJoinRequest = async (communityId: number, type: string) => {
+  const handleJoinRequest = async (communityId: number) => {
     try {
-      await api.post(`/communities/${communityId}/requests`);
-      Alert.alert("İstek Gönderildi", type === "PRIVATE" ? "Katılma isteğiniz yöneticiye iletildi." : "Topluluğa başarıyla katıldınız.");
+      const response = await api.post(`/communities/${communityId}/requests`);
+      Alert.alert("Başarılı", response.data.message);
       fetchCommunities();
     } catch (err: any) {
       Alert.alert("Hata", err.response?.data?.message || "İşlem başarısız oldu.");

@@ -68,6 +68,9 @@ public class DataSeeder implements CommandLineRunner {
             c1.setName("bahcecilik");
             c1.setDescription("Toprakla uğraşmayı sevenler kulübü. Saksı çiçeklerinden tarlaya kadar her şey.");
             c1.setType(CommunityType.PUBLIC);
+            c1.setOwner(user1);
+            c1.getMembers().add(user1);
+            c1.getModerators().add(user1);
             communityRepository.save(c1);
 
             Community c2 = new Community();
@@ -75,6 +78,9 @@ public class DataSeeder implements CommandLineRunner {
             c2.setDescription("Sabah yürüyüşleri, egzersizler ve sağlıklı beslenme tüyoları.");
             c2.setType(CommunityType.PUBLIC);
             c2.setOfficial(true);
+            c2.setOwner(officialUser);
+            c2.getMembers().add(officialUser);
+            c2.getModerators().add(officialUser);
             communityRepository.save(c2);
 
             // 3. Postları (Gönderileri) Oluştur

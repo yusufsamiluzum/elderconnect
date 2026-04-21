@@ -22,4 +22,6 @@ public class PostResponseDTO {
     private Long commentCount;
     private String userVote; // UPVOTE, DOWNVOTE, or null
     private Long originalPostId;
+    private Long communityId;
+    private String communityName;
 }

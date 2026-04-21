@@ -17,5 +17,6 @@ public class CommunityResponseDTO {
     private Integer memberCount;
     private boolean isOfficial;
     private CommunityType type;
+    private String ownerName;
     private boolean isUserMember;
 }

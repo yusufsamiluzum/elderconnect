@@ -39,9 +39,9 @@ public class CommunityController {
     }
 
     @PostMapping("/{id}/requests")
-    public ResponseEntity<?> requestJoinCommunity(@PathVariable Long id) {
-        communityService.requestJoinCommunity(id);
-        return ResponseEntity.ok(new MessageResponse("Join request sent successfully!"));
+    public ResponseEntity<?> joinCommunity(@PathVariable Long id) {
+        String message = communityService.joinCommunity(id);
+        return ResponseEntity.ok(new MessageResponse(message));
     }
 
     @GetMapping("/{id}/requests")

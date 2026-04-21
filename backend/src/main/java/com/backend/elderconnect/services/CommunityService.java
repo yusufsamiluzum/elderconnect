@@ -37,6 +37,7 @@ public class CommunityService {
     @Autowired
     PostRepository postRepository;
 
+    @Transactional(readOnly = true)
     public List<CommunityResponseDTO> getAllCommunities(String filter) {
         List<Community> communities;
         if ("official".equals(filter)) {
@@ -64,6 +65,7 @@ public class CommunityService {
         
         String username = getCurrentUsername();
         User creator = userRepository.findByUsername(username).get();
+        community.setOwner(creator);
         community.getModerators().add(creator);
         community.getMembers().add(creator);
 
@@ -71,12 +73,14 @@ public class CommunityService {
         return mapCommunityToDTO(community);
     }
 
+    @Transactional(readOnly = true)
     public CommunityResponseDTO getCommunityDetail(String name) {
         Community community = communityRepository.findByName(name)
                 .orElseThrow(() -> new RuntimeException("Error: Community not found."));
         return mapCommunityToDTO(community);
     }
 
+    @Transactional(readOnly = true)
     public CommunityResponseDTO getCommunityById(Long id) {
         Community community = communityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Error: Community not found."));
@@ -84,18 +88,31 @@ public class CommunityService {
     }
 
     @Transactional
-    public void requestJoinCommunity(Long id) {
+    public String joinCommunity(Long id) {
         String username = getCurrentUsername();
-        User user = userRepository.findByUsername(username).get();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Hata: Kullanıcı bulunamadı."));
+                
         Community community = communityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Error: Community not found."));
+                .orElseThrow(() -> new RuntimeException("Hata: Topluluk bulunamadı."));
 
         if (community.getMembers().contains(user)) {
-             throw new RuntimeException("Error: You are already a member.");
+             throw new RuntimeException("Hata: Zaten bu topluluğun üyesisiniz.");
         }
 
+        // Halka açık topluluklar için doğrudan katılma
+        if (community.getType() == CommunityType.PUBLIC) {
+            community.getMembers().add(user);
+            communityRepository.save(community);
+            // Varsa bekleyen isteği temizle
+            communityRequestRepository.findByCommunityIdAndUserId(id, user.getId())
+                .ifPresent(req -> communityRequestRepository.delete(req));
+            return "Topluluğa başarıyla katıldınız!";
+        }
+
+        // Gizli topluluklar için istek oluşturma
         if (communityRequestRepository.findByCommunityIdAndUserId(id, user.getId()).isPresent()) {
-             throw new RuntimeException("Error: You already have a pending request.");
+             throw new RuntimeException("Hata: Zaten bir katılım isteğiniz bulunuyor.");
         }
 
         CommunityRequest req = new CommunityRequest();
@@ -103,6 +120,7 @@ public class CommunityService {
         req.setUser(user);
         req.setStatus(CommunityRequestStatus.PENDING);
         communityRequestRepository.save(req);
+        return "Katılım isteğiniz yöneticiye iletildi.";
     }
 
     @Transactional
@@ -237,6 +255,7 @@ public class CommunityService {
                 .memberCount(community.getMembers().size())
                 .isOfficial(community.isOfficial())
                 .type(community.getType())
+                .ownerName(community.getOwner() != null ? community.getOwner().getUsername() : null)
                 .isUserMember(isMember)
                 .build();
     }

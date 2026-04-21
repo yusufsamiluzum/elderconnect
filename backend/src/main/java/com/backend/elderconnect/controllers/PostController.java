@@ -17,9 +17,10 @@ public class PostController {
     @GetMapping
     public ResponseEntity<?> getAllPosts(
             @RequestParam(defaultValue = "new") String sort,
+            @RequestParam(defaultValue = "all") String filter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(postService.getAllPosts(sort, page, size));
+        return ResponseEntity.ok(postService.getAllPosts(sort, filter, page, size));
     }
 
     @GetMapping("/past-events")

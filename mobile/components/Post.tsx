@@ -9,6 +9,7 @@ interface PostProps {
   author: string;
   authorRole: "standard" | "official" | "super_admin";
   community?: string;
+  communityId?: number;
   title: string;
   content: string;
   image?: string;
@@ -18,11 +19,12 @@ interface PostProps {
   timestamp: string;
 }
 
-export function Post({ id, author, authorRole, community, title, content, image, upvotes, downvotes, commentCount, timestamp }: PostProps) {
+export function Post({ id, author, authorRole, community, communityId, title, content, image, upvotes, downvotes, commentCount, timestamp }: PostProps) {
   const [userVote, setUserVote] = useState<"UPVOTE" | "DOWNVOTE" | null>(null);
   const [currentScore, setCurrentScore] = useState(upvotes - downvotes);
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
+
   const [comments, setComments] = useState([
     {
       id: "1",
@@ -119,9 +121,14 @@ export function Post({ id, author, authorRole, community, title, content, image,
         <View className="flex-1">
           <View className="flex-row items-center flex-wrap mb-2">
             {community && (
-              <Text className="text-muted-foreground text-xs mr-1">
-                c/{community} •
-              </Text>
+              <TouchableOpacity 
+                onPress={() => communityId && router.push(`/community/${communityId}`)}
+                className="mr-1"
+              >
+                <Text className="text-accent text-xs font-bold">
+                  c/{community} •
+                </Text>
+              </TouchableOpacity>
             )}
             <View className="flex-row items-center">
               <Text className="text-xs text-foreground">Gönderen: u/{author}</Text>

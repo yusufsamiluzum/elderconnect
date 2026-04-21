@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Plus, TrendingUp, Clock, Award, Users, Camera, X } from 'lucide-react-native';
+import { useLocalSearchParams, router } from 'expo-router';
 import { Post } from '../../components/Post';
 import { api } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
@@ -9,11 +10,13 @@ import * as ImagePicker from 'expo-image-picker';
 
 export default function FeedScreen() {
   const { user } = useAuth();
+  const params = useLocalSearchParams();
   const [posts, setPosts] = useState([]);
   const [communities, setCommunities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [sortBy, setSortBy] = useState<"hot" | "new" | "top">("new");
+  const [filterBy, setFilterBy] = useState<"all" | "following">("all");
   
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newPostTitle, setNewPostTitle] = useState("");
@@ -21,13 +24,22 @@ export default function FeedScreen() {
   const [selectedCommunityId, setSelectedCommunityId] = useState<number | null>(null);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (params.openCreate === 'true') {
+      setShowCreatePost(true);
+      if (params.communityId) {
+        setSelectedCommunityId(Number(params.communityId));
+      }
+    }
+  }, [params.openCreate, params.communityId]);
+
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
       const response = await api.get('/posts', {
-        params: { sort: sortBy, page: 0, size: 20 }
+        params: { sort: sortBy, filter: filterBy, page: 0, size: 20 }
       });
-      setPosts(response.data);
+      setPosts(response.data.content || response.data);
     } catch (err) {
       console.error("Gönderiler yüklenemedi:", err);
     } finally {
@@ -46,7 +58,7 @@ export default function FeedScreen() {
 
   useEffect(() => {
     fetchPosts();
-  }, [sortBy]);
+  }, [sortBy, filterBy]);
 
   useEffect(() => {
     if (showCreatePost) {
@@ -80,18 +92,28 @@ export default function FeedScreen() {
       // Upload image first if selected
       if (selectedImage) {
         const formData = new FormData();
-        const uriParts = selectedImage.split('.');
-        const fileType = uriParts[uriParts.length - 1];
-
-        // @ts-ignore
-        formData.append('file', {
-          uri: selectedImage,
-          name: `upload.${fileType}`,
-          type: `image/${fileType}`,
-        });
+        
+        if (Platform.OS === 'web') {
+          // For web, we need to fetch the blob from the URI
+          const response = await fetch(selectedImage);
+          const blob = await response.blob();
+          formData.append('file', blob, 'upload.jpg');
+        } else {
+          const uriParts = selectedImage.split('.');
+          const fileType = uriParts[uriParts.length - 1];
+          // @ts-ignore
+          formData.append('file', {
+            uri: selectedImage,
+            name: `upload.${fileType}`,
+            type: `image/${fileType}`,
+          });
+        }
 
         const uploadRes = await api.post('/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 
+            'Content-Type': 'multipart/form-data',
+            'Accept': 'application/json' 
+          }
         });
         pictureUrl = uploadRes.data.url;
       }
@@ -141,23 +163,35 @@ export default function FeedScreen() {
 
           {showCreatePost && (
             <View className="mt-4">
-              <Text className="text-foreground font-medium mb-2 text-sm">Topluluk Seç (Opsiyonel)</Text>
+              <Text className="text-foreground font-medium mb-2 text-sm">Nerede paylaşmak istersiniz?</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-2 mb-4">
                 <TouchableOpacity 
                    onPress={() => setSelectedCommunityId(null)}
                    className={`px-4 py-2 rounded-full border ${selectedCommunityId === null ? 'bg-accent border-accent' : 'bg-transparent border-border'}`}
                 >
-                  <Text className={selectedCommunityId === null ? 'text-white' : 'text-foreground'}>Genel</Text>
+                  <Text className={selectedCommunityId === null ? 'text-white' : 'text-foreground'}>Ana Akış (Genel)</Text>
                 </TouchableOpacity>
-                {communities.map((c: any) => (
-                  <TouchableOpacity 
-                    key={c.id}
-                    onPress={() => setSelectedCommunityId(c.id)}
-                    className={`px-4 py-2 rounded-full border ${selectedCommunityId === c.id ? 'bg-accent border-accent' : 'bg-transparent border-border'}`}
-                  >
-                    <Text className={selectedCommunityId === c.id ? 'text-white' : 'text-foreground'}>c/{c.name}</Text>
-                  </TouchableOpacity>
-                ))}
+                {communities.map((c: any) => {
+                  const canPost = !c.isOfficial || user?.isApproved; // Simplification: isApproved means official role
+                  if (!canPost && !c.isUserMember) return null; // Only show if member or can post
+                  
+                  return (
+                    <TouchableOpacity 
+                      key={c.id}
+                      onPress={() => setSelectedCommunityId(c.id)}
+                      className={`px-4 py-2 rounded-full border ${selectedCommunityId === c.id ? 'bg-accent border-accent' : 'bg-transparent border-border'}`}
+                    >
+                      <View className="flex-row items-center gap-1.5">
+                        <Text className={selectedCommunityId === c.id ? 'text-white' : 'text-foreground'}>
+                          c/{c.name} {c.isOfficial ? '📢' : ''}
+                        </Text>
+                        {c.isUserMember && (
+                          <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </ScrollView>
 
               <TextInput
@@ -224,33 +258,27 @@ export default function FeedScreen() {
           )}
         </View>
 
-        <View className="bg-card border border-border rounded-lg p-2 mb-4 flex-row gap-2">
-          <TouchableOpacity
-            onPress={() => setSortBy("hot")}
-            className={`flex-1 py-2 rounded-lg flex-row items-center justify-center gap-2 ${
-              sortBy === "hot" ? "bg-accent" : "bg-transparent"
-            }`}
+        <View className="bg-card border border-border rounded-lg p-2.5 mb-6 flex-row gap-2">
+          <TouchableOpacity 
+            onPress={() => { setSortBy("hot"); setFilterBy("all"); }}
+            className={`flex-1 py-1.5 ${sortBy === "hot" && filterBy === "all" ? "bg-accent" : "bg-transparent"} rounded flex-row justify-center items-center gap-2`}
           >
-            <TrendingUp size={20} color={sortBy === "hot" ? "#fff" : "hsl(var(--foreground))"} />
-            <Text className={`font-medium ${sortBy === "hot" ? "text-white" : "text-foreground"}`}>Popüler</Text>
+            <TrendingUp size={18} color={sortBy === "hot" && filterBy === "all" ? "#fff" : "hsl(var(--foreground))"} />
+            <Text className={`${sortBy === "hot" && filterBy === "all" ? "text-white" : "text-foreground"} font-medium text-sm`}>Popüler</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setSortBy("new")}
-            className={`flex-1 py-2 rounded-lg flex-row items-center justify-center gap-2 ${
-              sortBy === "new" ? "bg-accent" : "bg-transparent"
-            }`}
+          <TouchableOpacity 
+            onPress={() => { setSortBy("new"); setFilterBy("all"); }}
+            className={`flex-1 py-1.5 ${sortBy === "new" && filterBy === "all" ? "bg-accent" : "bg-transparent"} rounded flex-row justify-center items-center gap-2`}
           >
-            <Clock size={20} color={sortBy === "new" ? "#fff" : "hsl(var(--foreground))"} />
-            <Text className={`font-medium ${sortBy === "new" ? "text-white" : "text-foreground"}`}>En Yeni</Text>
+            <Clock size={18} color={sortBy === "new" && filterBy === "all" ? "#fff" : "hsl(var(--foreground))"} />
+            <Text className={`${sortBy === "new" && filterBy === "all" ? "text-white" : "text-foreground"} font-medium text-sm`}>En Yeni</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setSortBy("top")}
-            className={`flex-1 py-2 rounded-lg flex-row items-center justify-center gap-2 ${
-              sortBy === "top" ? "bg-accent" : "bg-transparent"
-            }`}
+          <TouchableOpacity 
+            onPress={() => { setSortBy("new"); setFilterBy("following"); }}
+            className={`flex-1 py-1.5 ${filterBy === "following" ? "bg-accent" : "bg-transparent"} rounded flex-row justify-center items-center gap-2`}
           >
-            <Award size={20} color={sortBy === "top" ? "#fff" : "hsl(var(--foreground))"} />
-            <Text className={`font-medium ${sortBy === "top" ? "text-white" : "text-foreground"}`}>En İyi</Text>
+            <Award size={18} color={filterBy === "following" ? "#fff" : "hsl(var(--foreground))"} />
+            <Text className={`${filterBy === "following" ? "text-white" : "text-foreground"} font-medium text-sm`}>Senin Sayfan</Text>
           </TouchableOpacity>
         </View>
 
@@ -265,6 +293,7 @@ export default function FeedScreen() {
                 author={post.authorName}
                 authorRole={post.isOfficialAuthor ? "official" : "standard"}
                 community={post.communityName}
+                communityId={post.communityId}
                 title={post.title}
                 content={post.content}
                 image={post.pictureUrl}

@@ -142,6 +142,8 @@ export default function CommunityDetailScreen() {
                 id={post.id}
                 author={post.authorName}
                 authorRole={post.isOfficialAuthor ? "official" : "standard"}
+                community={community.name}
+                communityId={Number(id)}
                 title={post.title}
                 content={post.content}
                 image={post.pictureUrl}

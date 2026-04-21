@@ -13,6 +13,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,14 +33,13 @@ public class PostService {
     @Autowired
     CommunityRepository communityRepository;
 
-    public Page<PostResponseDTO> getAllPosts(String sortType, int page, int size) {
+    public Page<PostResponseDTO> getAllPosts(String sortType, String filter, int page, int size) {
         Pageable pageable;
         switch (sortType) {
             case "top":
                 pageable = PageRequest.of(page, size, Sort.by("score").descending());
                 break;
             case "hot":
-                // For "Hot", we'll just use a combination of score and date for now.
                 pageable = PageRequest.of(page, size, Sort.by("score").descending().and(Sort.by("createdAt").descending()));
                 break;
             case "new":
@@ -46,7 +48,22 @@ public class PostService {
                 break;
         }
 
-        return postRepository.findActivePostsByCommunityIsNull(pageable).map(this::mapPostToDTO);
+        String username = null;
+        try { username = getCurrentUsername(); } catch (Exception e) {}
+        
+        List<Community> joinedCommunities = java.util.Collections.emptyList();
+        if (username != null && !"anonymousUser".equals(username)) {
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null) {
+                joinedCommunities = new java.util.ArrayList<>(user.getCommunitiesJoined());
+            }
+        }
+
+        if ("following".equals(filter)) {
+            return postRepository.findFollowingPosts(joinedCommunities, pageable).map(this::mapPostToDTO);
+        } else {
+            return postRepository.findFeedPosts(joinedCommunities, pageable).map(this::mapPostToDTO);
+        }
     }
 
     public Page<PostResponseDTO> getPastPosts(int page, int size) {
@@ -64,8 +81,20 @@ public class PostService {
         String username = getCurrentUsername();
         User author = userRepository.findByUsername(username).get();
 
-        if (!author.getRoles().contains(UserRole.ROLE_OFFICIAL)) {
-            throw new RuntimeException("Error: Only official accounts can create posts.");
+        Community community = null;
+        if (communityId != null) {
+            community = communityRepository.findById(communityId)
+                    .orElseThrow(() -> new RuntimeException("Error: Community not found."));
+
+            // RULE 1: Bulletins (Official Communities) only allow OFFICIAL users to post
+            if (community.isOfficial() && !author.getRoles().contains(UserRole.ROLE_OFFICIAL)) {
+                throw new RuntimeException("Error: Only official accounts can post to this community (Bülten).");
+            }
+
+            // RULE 2: Public communities require membership to post (Reddit-like)
+            if (!community.isOfficial() && !community.getMembers().contains(author)) {
+                throw new RuntimeException("Error: You must join this community before sharing a post.");
+            }
         }
 
         Post post = new Post();
@@ -77,8 +106,6 @@ public class PostService {
         post.setScore(0);
 
         if (communityId != null) {
-            Community community = communityRepository.findById(communityId)
-                    .orElseThrow(() -> new RuntimeException("Error: Community not found."));
             post.setCommunity(community);
         }
 
@@ -214,11 +241,13 @@ public class PostService {
                 .pictureUrl(post.getPictureUrl())
                 .score(post.getScore())
                 .createdAt(post.getCreatedAt())
-                .authorName(post.getAuthor().getUsername())
-                .isOfficialAuthor(post.getAuthor().isApproved())
-                .commentCount((long) post.getComments().size())
+                .authorName(post.getAuthor() != null ? post.getAuthor().getUsername() : "Bilinmeyen")
+                .isOfficialAuthor(post.getAuthor() != null && post.getAuthor().getRoles().contains(UserRole.ROLE_OFFICIAL))
+                .commentCount((long) (post.getComments() != null ? post.getComments().size() : 0))
                 .userVote(userVote)
                 .originalPostId(post.getOriginalPost() != null ? post.getOriginalPost().getId() : null)
+                .communityId(post.getCommunity() != null ? post.getCommunity().getId() : null)
+                .communityName(post.getCommunity() != null ? post.getCommunity().getName() : null)
                 .build();
     }
 }
