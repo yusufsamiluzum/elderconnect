@@ -2,12 +2,8 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { getToken } from './auth';
 
-// For Android Emulator, localhost is 10.0.2.2
-// For iOS Simulator, localhost is localhost or 127.0.0.1
-// Default Spring Boot backend port is 8082 as configured earlier.
-const BACKEND_URL = Platform.OS === 'android' 
-  ? 'http://10.0.2.2:8082' 
-  : 'http://localhost:8082';
+// Physical device: use the computer's local WiFi IP
+const BACKEND_URL = 'http://192.168.1.103:8082';
 
 export const api = axios.create({
   baseURL: `${BACKEND_URL}/api`,
