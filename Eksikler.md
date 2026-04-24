@@ -1,4 +1,4 @@
--topluluklara tıklayınca yüklenmesinde bad request hatamız var
+-topluluklara tıklayınca yüklenmesinde bad request hatamız var(topluluk dashboardı vs eklendi ancak yüklenmeme sorunu devam ediyor.)
 -gönderilierin altında yorum olmasına rağmen 0 yorum yazıyor yeni yorum atınca da o an görünüyor ancak geri gidip geri dönünce kayboluyor.
 -upvote veya downvote yapınca sadece değiştirebiliyoruz geri alamıyoruz ve sonsuz upvote veya downvote kullanabiliyoruz sayfa değişince geri gelip tekrar kullanabiliyoruz.
 -gönderi paylaşımı yaparken admini olmadığımız topluluklarda da paylaşım yapabiliyoruz. Topluluklarda bir admin sistemimiz var mı varsa nasıl işliyor?
