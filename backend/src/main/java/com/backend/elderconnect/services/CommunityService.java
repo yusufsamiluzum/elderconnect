@@ -1,6 +1,7 @@
 package com.backend.elderconnect.services;
 
 import com.backend.elderconnect.dto.CommunityResponseDTO;
+import com.backend.elderconnect.dto.JoinRequestDTO;
 import com.backend.elderconnect.dto.PostResponseDTO;
 import com.backend.elderconnect.dto.UserProfileDTO;
 import com.backend.elderconnect.entities.Community;
@@ -87,6 +88,16 @@ public class CommunityService {
         return mapCommunityToDTO(community);
     }
 
+    @Transactional(readOnly = true)
+    public List<CommunityResponseDTO> getMyCommunities() {
+        String username = getCurrentUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Error: User not found."));
+        return communityRepository.findByMembersContaining(user).stream()
+                .map(this::mapCommunityToDTO)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public String joinCommunity(Long id) {
         String username = getCurrentUsername();
@@ -136,10 +147,11 @@ public class CommunityService {
         communityRepository.save(community);
     }
 
-    public List<UserProfileDTO> getPendingRequests(Long communityId) {
+    @Transactional(readOnly = true)
+    public List<JoinRequestDTO> getPendingRequests(Long communityId) {
         Community community = communityRepository.findById(communityId)
                 .orElseThrow(() -> new RuntimeException("Error: Community not found."));
-        
+
         String username = getCurrentUsername();
         User currentUser = userRepository.findByUsername(username).get();
         if (!community.getModerators().contains(currentUser)) {
@@ -147,7 +159,13 @@ public class CommunityService {
         }
 
         return communityRequestRepository.findByCommunityIdAndStatus(communityId, CommunityRequestStatus.PENDING).stream()
-                .map(req -> mapUserToDTO(req.getUser()))
+                .map(req -> JoinRequestDTO.builder()
+                        .requestId(req.getId())
+                        .userId(req.getUser().getId())
+                        .username(req.getUser().getUsername())
+                        .name(req.getUser().getName())
+                        .surname(req.getUser().getSurname())
+                        .build())
                 .collect(Collectors.toList());
     }
 
@@ -179,6 +197,7 @@ public class CommunityService {
         communityRequestRepository.save(req);
     }
 
+    @Transactional(readOnly = true)
     public List<PostResponseDTO> getCommunityPosts(Long id, int page, int size) {
         Community community = communityRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Error: Community not found."));
@@ -241,10 +260,12 @@ public class CommunityService {
         } catch (Exception e) {}
 
         boolean isMember = false;
+        boolean isModerator = false;
         if (username != null) {
             User user = userRepository.findByUsername(username).orElse(null);
             if (user != null) {
                 isMember = community.getMembers().contains(user);
+                isModerator = community.getModerators().contains(user);
             }
         }
 
@@ -257,6 +278,7 @@ public class CommunityService {
                 .type(community.getType())
                 .ownerName(community.getOwner() != null ? community.getOwner().getUsername() : null)
                 .isUserMember(isMember)
+                .isUserModerator(isModerator)
                 .build();
     }
 
@@ -277,6 +299,7 @@ public class CommunityService {
 
     private UserProfileDTO mapUserToDTO(User user) {
         return UserProfileDTO.builder()
+                .id(user.getId())
                 .username(user.getUsername())
                 .name(user.getName())
                 .surname(user.getSurname())

@@ -7,6 +7,7 @@ import com.backend.elderconnect.entities.User;
 import com.backend.elderconnect.repositories.CommentRepository;
 import com.backend.elderconnect.repositories.PostRepository;
 import com.backend.elderconnect.repositories.UserRepository;
+import com.backend.elderconnect.services.CommunityService;
 import com.backend.elderconnect.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ import java.util.stream.Collectors;
 public class UserController {
     @Autowired
     UserService userService;
+
+    @Autowired
+    CommunityService communityService;
 
     @Autowired
     UserRepository userRepository;
@@ -55,6 +59,11 @@ public class UserController {
     @GetMapping("/me/official-stats")
     public ResponseEntity<?> getOfficialStats() {
         return ResponseEntity.ok(userService.getOfficialStats());
+    }
+
+    @GetMapping("/me/communities")
+    public ResponseEntity<?> getMyCommunities() {
+        return ResponseEntity.ok(communityService.getMyCommunities());
     }
 
     @GetMapping("/me/saved")

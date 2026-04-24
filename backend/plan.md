@@ -5,15 +5,15 @@ Bu dosya ElderConnect uygulamasının roller, kullanım durumları (use cases) v
 ## Kullanıcı Rolleri ve Yetkileri
 
 ### 1. Standart Kullanıcı (Role_User)
-- [ ] Uygulamaya giriş yaptıklarında official (resmi) hesapların paylaştığı etkinlikleri "ana akış" üzerinde görüntüleyebilme.
-- [ ] Bu paylaşımlara yorum yazabilme.
-- [ ] Paylaşımlar üzerinde Upvote ve Downvote şeklinde oy kullanabilme.
+- [x] Uygulamaya giriş yaptıklarında official (resmi) hesapların ve şahısların paylaştığı etkinlikleri "ana akış" üzerinde görüntüleyebilme.
+- [x] Bu paylaşımlara yorum yazabilme.
+- [x] Paylaşımlar üzerinde Upvote ve Downvote şeklinde oy kullanabilme.
 - [ ] Paylaşımları "Kaydet" butonu ile kaydedip, kendi profil sayfalarında listeleyebilme.
-- [ ] Kendi profil sayfasına erişebilme ve kendisine ait bilgileri görüntüleyebilme.
-- [ ] İsteğe bağlı olarak yeni bir "Community" (Topluluk) oluşturabilme ve oluşturduğu community'nin yetkili **Community Admin'i** olma.
-- [ ] Ana sayfada bulunan "Communityler" sekmesi üzerinden mevcut toplulukları listeleyebilme ve katılma isteği gönderebilme.
-- [ ] **(Eğer Community Admin ise)** Topluluğa gelen katılma isteklerini kabul/reddetme ve diğer topluluk işlerini "Community Dashboard" üzerinden yönetebilme.
-- [ ] **(Eğer Community Admin ise)** Community'deki diğer kullanıcılara adminlik yetkisi verebilme.
+- [x] Kendi profil sayfasına erişebilme ve kendisine ait bilgileri görüntüleyebilme.
+- [x] İsteğe bağlı olarak yeni bir "Community" (Topluluk) oluşturabilme ve oluşturduğu community'nin yetkili **Community Admin'i** olma.
+- [x] Ana sayfada bulunan "Communityler" sekmesi üzerinden mevcut toplulukları listeleyebilme ve katılma isteği gönderebilme.
+- [x] **(Eğer Community Admin ise)** Topluluğa gelen katılma isteklerini kabul/reddetme ve diğer topluluk işlerini "Community Dashboard" üzerinden yönetebilme.
+- [x] **(Eğer Community Admin ise)** Community'deki diğer kullanıcılara adminlik yetkisi verebilme.
 - [ ] **(Eğer Community Admin ise)** İstediği bir postu admini olduğu community'lerde yeniden paylaşabilme (Repost). (Repost tuşuna tıklandığında yetkili olunan community'ler listelenir ve seçim yaptırılır).
 
 ### 2. Resmi Hesap Yöneticisi (Role_Official)
@@ -52,7 +52,7 @@ Bu dosya ElderConnect uygulamasının roller, kullanım durumları (use cases) v
 - [ ] Kullanıcı tipi (User veya Official) seçimini içeren bir kayıt (Register) ekranı olması. 
 
 ### Dashboard'lar
-- [ ] **Community Dashboard:** Topluluk üyelerinin, katılma isteklerinin, repost ayarlamalarının ve admin yetkilerinin kontrolü.
+- [x] **Community Dashboard:** Topluluk üyelerinin, katılma isteklerinin, repost ayarlamalarının ve admin yetkilerinin kontrolü.
 - [ ] **Resmi (Official) Hesap Dashboard:** Etkinliklerin analitik bazda kontrolü, yeni etkinlik oluşturma yetkileri.
 - [ ] **Süper Admin Dashboard:** Sistemdeki tüm hareketleri (Kullanıcı silme, post gizleme/kaldırma, yeni official hesabı onaylama vb.) yönetebilecek super admin paneli.
 
