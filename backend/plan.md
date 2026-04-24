@@ -8,13 +8,13 @@ Bu dosya ElderConnect uygulamasının roller, kullanım durumları (use cases) v
 - [x] Uygulamaya giriş yaptıklarında official (resmi) hesapların ve şahısların paylaştığı etkinlikleri "ana akış" üzerinde görüntüleyebilme.
 - [x] Bu paylaşımlara yorum yazabilme.
 - [x] Paylaşımlar üzerinde Upvote ve Downvote şeklinde oy kullanabilme.
-- [ ] Paylaşımları "Kaydet" butonu ile kaydedip, kendi profil sayfalarında listeleyebilme.
+- [x] Paylaşımları "Kaydet" butonu ile kaydedip, kendi profil sayfalarında listeleyebilme.
 - [x] Kendi profil sayfasına erişebilme ve kendisine ait bilgileri görüntüleyebilme.
 - [x] İsteğe bağlı olarak yeni bir "Community" (Topluluk) oluşturabilme ve oluşturduğu community'nin yetkili **Community Admin'i** olma.
 - [x] Ana sayfada bulunan "Communityler" sekmesi üzerinden mevcut toplulukları listeleyebilme ve katılma isteği gönderebilme.
 - [x] **(Eğer Community Admin ise)** Topluluğa gelen katılma isteklerini kabul/reddetme ve diğer topluluk işlerini "Community Dashboard" üzerinden yönetebilme.
 - [x] **(Eğer Community Admin ise)** Community'deki diğer kullanıcılara adminlik yetkisi verebilme.
-- [ ] **(Eğer Community Admin ise)** İstediği bir postu admini olduğu community'lerde yeniden paylaşabilme (Repost). (Repost tuşuna tıklandığında yetkili olunan community'ler listelenir ve seçim yaptırılır).
+- [x] **(Eğer Community Admin ise)** İstediği bir postu admini olduğu community'lerde yeniden paylaşabilme (Repost). (Repost tuşuna tıklandığında yetkili olunan community'ler listelenir ve seçim yaptırılır).
 
 ### 2. Resmi Hesap Yöneticisi (Role_Official)
 - [ ] Belediye, vakıf vb. kurumsal hesapları temsil eden kullanıcılardır.
@@ -42,7 +42,7 @@ Bu dosya ElderConnect uygulamasının roller, kullanım durumları (use cases) v
 - [ ] Official kullanıcılar (resmi hesaplar) tarafından oluşturulur.
 - [ ] Post içeriği: Resimler, açıklama mesajı, etkinlik tarihi, ve post oluşturulma tarihi.
 - [ ] Standart user'lar tarafından post üzerinde etkileşime girilecek buton/aksiyonlar:
-  - Upvote / Downvote, Yorum Yap, Kaydet.
+  - Upvote / Downvote, Yorum Yap, Kaydet, repost.
 - [ ] Community Admin'leri tarafından post üzerinde kullanılacak:
   - Repost et butonu.
 - [ ] **Otomatik Durum Güncelleme:** Etkinliğin yapılma süresi/sona erme tarihi bittiğinde, ilgili post kırmızı bir font ile "Bu etkinlik bitmiştir" ibaresiyle güncellenir ve güncel ana akıştan düşerek arşiv niteliğindeki ilgili sekmeye (Geçmiş etkinlikler) aktarılır.
