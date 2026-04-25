@@ -3,6 +3,7 @@ import { api } from '../utils/api';
 import { getToken, saveTokens, clearTokens } from '../utils/auth';
 
 interface UserProfile {
+  id: number;
   username: string;
   name: string;
   surname: string;
@@ -11,11 +12,14 @@ interface UserProfile {
   joinedAt: string;
   isApproved: boolean;
   karmaScore: number;
+  roles: string[];
 }
 
 interface AuthContextType {
   user: UserProfile | null;
   isLoading: boolean;
+  isAdmin: boolean;
+  isOfficial: boolean;
   login: (token: string, refreshToken: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -24,6 +28,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
+  isAdmin: false,
+  isOfficial: false,
   login: async () => {},
   logout: async () => {},
   checkAuth: async () => {},
@@ -35,13 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
+  const isOfficial = user?.roles?.includes('ROLE_OFFICIAL') ?? false;
+
   const fetchCurrentUser = async () => {
     try {
       const response = await api.get('/users/me');
       setUser(response.data);
     } catch (error) {
-      console.error("Failed to fetch current user", error);
-      // Attempt to clear if token is invalid
+      console.error('Failed to fetch current user', error);
       setUser(null);
     }
   };
@@ -51,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const token = await getToken();
       if (token) {
-        // Token exists in local storage, fetch user details
         await fetchCurrentUser();
       } else {
         setUser(null);
@@ -71,7 +78,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (token: string, refreshToken: string) => {
     setIsLoading(true);
     await saveTokens(token, refreshToken);
-    // After saving token, Axios interceptor will use it. Now fetch user
     await fetchCurrentUser();
     setIsLoading(false);
   };
@@ -84,7 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, isLoading, isAdmin, isOfficial, login, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

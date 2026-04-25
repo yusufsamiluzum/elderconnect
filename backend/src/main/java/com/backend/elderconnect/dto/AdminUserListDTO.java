@@ -13,16 +13,15 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserProfileDTO {
+public class AdminUserListDTO {
     private Long id;
     private String username;
+    private String email;
     private String name;
     private String surname;
     private String city;
-    private String description;
-    private LocalDateTime joinedAt;
+    private Set<String> roles;
     @JsonProperty("isApproved")
     private boolean isApproved;
-    private Integer karmaScore;
-    private Set<String> roles;
+    private LocalDateTime joinedAt;
 }

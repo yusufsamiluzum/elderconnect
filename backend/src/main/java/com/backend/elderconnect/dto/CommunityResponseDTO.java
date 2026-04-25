@@ -16,8 +16,6 @@ public class CommunityResponseDTO {
     private String name;
     private String description;
     private Integer memberCount;
-    @JsonProperty("isOfficial")
-    private boolean isOfficial;
     private CommunityType type;
     private String ownerName;
     @JsonProperty("isUserMember")

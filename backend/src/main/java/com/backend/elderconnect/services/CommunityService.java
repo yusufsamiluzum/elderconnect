@@ -40,13 +40,8 @@ public class CommunityService {
 
     @Transactional(readOnly = true)
     public List<CommunityResponseDTO> getAllCommunities(String filter) {
-        List<Community> communities;
-        if ("official".equals(filter)) {
-            communities = communityRepository.findAllOfficial();
-        } else {
-            // "popular" filter could be based on member count, for now just all
-            communities = communityRepository.findAll();
-        }
+        // "popular" filter could be based on member count, for now just all
+        List<Community> communities = communityRepository.findAll();
 
         return communities.stream()
                 .map(this::mapCommunityToDTO)
@@ -274,7 +269,6 @@ public class CommunityService {
                 .name(community.getName())
                 .description(community.getDescription())
                 .memberCount(community.getMembers().size())
-                .isOfficial(community.isOfficial())
                 .type(community.getType())
                 .ownerName(community.getOwner() != null ? community.getOwner().getUsername() : null)
                 .isUserMember(isMember)

@@ -13,9 +13,6 @@ import java.util.Optional;
 public interface CommunityRepository extends JpaRepository<Community, Long> {
     Optional<Community> findByName(String name);
     
-    @Query("SELECT c FROM Community c WHERE c.isOfficial = true")
-    List<Community> findAllOfficial();
-    
     @Query("SELECT c FROM Community c WHERE c.name LIKE %:query% OR c.description LIKE %:query%")
     List<Community> searchCommunities(String query);
 
