@@ -13,6 +13,7 @@ export default function FeedScreen() {
   const params = useLocalSearchParams();
   const [posts, setPosts] = useState([]);
   const [communities, setCommunities] = useState([]);
+  const [adminCommunities, setAdminCommunities] = useState<{id: number; name: string}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [sortBy, setSortBy] = useState<"hot" | "new" | "top">("new");
@@ -65,6 +66,21 @@ export default function FeedScreen() {
       fetchMyCommunities();
     }
   }, [showCreatePost]);
+
+  useEffect(() => {
+    const fetchAdminCommunities = async () => {
+      try {
+        const res = await api.get('/users/me/communities');
+        const moderatorCommunities = (res.data || [])
+          .filter((c: any) => c.isUserModerator)
+          .map((c: any) => ({ id: c.id, name: c.name }));
+        setAdminCommunities(moderatorCommunities);
+      } catch (err) {
+        console.error("Admin topluluklar yüklenemedi:", err);
+      }
+    };
+    fetchAdminCommunities();
+  }, []);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -287,8 +303,8 @@ export default function FeedScreen() {
             <ActivityIndicator size="large" color="hsl(var(--accent))" />
           ) : posts.length > 0 ? (
             posts.map((post: any) => (
-              <Post 
-                key={post.id} 
+              <Post
+                key={post.id}
                 id={post.id}
                 author={post.authorName}
                 authorRole={post.isOfficialAuthor ? "official" : "standard"}
@@ -301,6 +317,7 @@ export default function FeedScreen() {
                 downvotes={0}
                 commentCount={post.commentCount}
                 timestamp={new Date(post.createdAt).toLocaleDateString('tr-TR')}
+                adminCommunities={adminCommunities}
               />
             ))
           ) : (

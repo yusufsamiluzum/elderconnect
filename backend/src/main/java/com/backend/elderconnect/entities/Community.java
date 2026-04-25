@@ -33,10 +33,6 @@ public class Community {
     @Column(nullable = false)
     private CommunityType type = CommunityType.PUBLIC;
 
-    // The official green tag seen in your mockups
-    @Column(nullable = false)
-    private boolean isOfficial = false;
-
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

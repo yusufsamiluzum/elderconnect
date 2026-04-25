@@ -52,7 +52,6 @@ public class SearchService {
                             .name(community.getName())
                             .description(community.getDescription())
                             .memberCount(community.getMembers().size())
-                            .isOfficial(community.isOfficial())
                             .type(community.getType())
                             .build())
                     .collect(Collectors.toList());

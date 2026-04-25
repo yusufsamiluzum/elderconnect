@@ -3,7 +3,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import '../global.css';
 
@@ -11,16 +11,13 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -29,7 +26,6 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
     if (error) throw error;
   }, [error]);
@@ -55,27 +51,43 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const segments = useSegments();
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isAdmin, isOfficial } = useAuth();
 
   useEffect(() => {
-    if (isLoading) return; // Wait until context finishes fetching user
+    if (isLoading) return;
 
-    const inAuthGroup = segments[0] === 'login';
+    const currentSegment = segments[0] as string;
+    const inAuthGroup = currentSegment === 'login';
+    const inPendingGroup = currentSegment === 'application-pending';
+    const inAdminGroup = currentSegment === 'admin';
 
-    if (!user && !inAuthGroup) {
-      // Eğer kullanıcı (token/profil) yoksa ve login sayfasında değilsek login'e at
+    const inOfficialGroup = currentSegment === 'official';
+
+    if (!user && !inAuthGroup && !inPendingGroup) {
       router.replace('/login');
     } else if (user && inAuthGroup) {
-      // Eğer kullanıcı varsa ve login sayfasındaysak içeri at
-      router.replace('/');
+      if (isAdmin) {
+        router.replace('/admin/dashboard' as any);
+      } else if (isOfficial) {
+        router.replace('/official/dashboard' as any);
+      } else {
+        router.replace('/(tabs)');
+      }
+    } else if (user && isAdmin && !inAdminGroup) {
+      router.replace('/admin/dashboard' as any);
+    } else if (user && isOfficial && !inOfficialGroup) {
+      router.replace('/official/dashboard' as any);
     }
-  }, [user, isLoading, segments]);
+  }, [user, isLoading, segments, isAdmin]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false, presentation: 'modal' }} />
+        <Stack.Screen name="application-pending" options={{ headerShown: false }} />
+        <Stack.Screen name="admin/dashboard" options={{ headerShown: false }} />
+        <Stack.Screen name="official/dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>

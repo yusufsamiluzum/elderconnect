@@ -15,23 +15,40 @@ public class DataSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
     private final CommunityRepository communityRepository;
     private final PostRepository postRepository;
+    private final OfficialProfileRepository officialProfileRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(UserRepository userRepository, CommunityRepository communityRepository, 
-                      PostRepository postRepository, PasswordEncoder passwordEncoder) {
+    public DataSeeder(UserRepository userRepository, CommunityRepository communityRepository,
+                      PostRepository postRepository, OfficialProfileRepository officialProfileRepository,
+                      PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.communityRepository = communityRepository;
         this.postRepository = postRepository;
+        this.officialProfileRepository = officialProfileRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        if (userRepository.count() == 0) {
+        // Admin yoksa her zaman oluştur
+        if (userRepository.findByUsername("admin").isEmpty()) {
+            User adminUser = new User();
+            adminUser.setUsername("admin");
+            adminUser.setEmail("admin@elderconnect.com");
+            adminUser.setPasswordHash(passwordEncoder.encode("admin123"));
+            adminUser.setName("Sistem");
+            adminUser.setSurname("Yöneticisi");
+            adminUser.getRoles().add(UserRole.ROLE_ADMIN);
+            adminUser.setApproved(true);
+            userRepository.save(adminUser);
+            System.out.println("Admin kullanıcı oluşturuldu: admin / admin123");
+        }
+
+        if (userRepository.count() <= 1) {
             System.out.println("Veritabanı boş, sahte veriler (dummy data) ekleniyor...");
 
-            // 1. Kullanıcıları Oluştur
+            // 1. Standart Kullanıcılar
             User user1 = new User();
             user1.setUsername("ahmet_amca");
             user1.setEmail("ahmet@example.com");
@@ -54,6 +71,7 @@ public class DataSeeder implements CommandLineRunner {
             user2.setApproved(true);
             userRepository.save(user2);
 
+            // 2. Resmi Hesap (Onaylı)
             User officialUser = new User();
             officialUser.setUsername("kadikoy_bld");
             officialUser.setEmail("info@kadikoy.bel.tr");
@@ -63,7 +81,25 @@ public class DataSeeder implements CommandLineRunner {
             officialUser.setApproved(true);
             userRepository.save(officialUser);
 
-            // 2. Toplulukları Oluştur
+            OfficialProfile officialProfile = new OfficialProfile();
+            officialProfile.setUser(officialUser);
+            officialProfile.setOrganizationName("Kadıköy Belediyesi");
+            officialProfile.setOrganizationType("BELEDIYE");
+            officialProfile.setOrganizationDescription("İstanbul Kadıköy Belediyesi resmi hesabı.");
+            officialProfileRepository.save(officialProfile);
+
+            // 3. Süper Admin
+            User adminUser = new User();
+            adminUser.setUsername("admin");
+            adminUser.setEmail("admin@elderconnect.com");
+            adminUser.setPasswordHash(passwordEncoder.encode("admin123"));
+            adminUser.setName("Sistem");
+            adminUser.setSurname("Yöneticisi");
+            adminUser.getRoles().add(UserRole.ROLE_ADMIN);
+            adminUser.setApproved(true);
+            userRepository.save(adminUser);
+
+            // 4. Topluluklar
             Community c1 = new Community();
             c1.setName("bahcecilik");
             c1.setDescription("Toprakla uğraşmayı sevenler kulübü. Saksı çiçeklerinden tarlaya kadar her şey.");
@@ -77,13 +113,12 @@ public class DataSeeder implements CommandLineRunner {
             c2.setName("saglikli-yasam");
             c2.setDescription("Sabah yürüyüşleri, egzersizler ve sağlıklı beslenme tüyoları.");
             c2.setType(CommunityType.PUBLIC);
-            c2.setOfficial(true);
             c2.setOwner(officialUser);
             c2.getMembers().add(officialUser);
             c2.getModerators().add(officialUser);
             communityRepository.save(c2);
 
-            // 3. Postları (Gönderileri) Oluştur
+            // 5. Postlar
             Post post1 = new Post();
             post1.setTitle("İlk biberlerim filizlendi!");
             post1.setContent("Balkondaki saksılarda yetiştirdiğim biberlerin ilk filizlerini gördüm, çok mutluyum.");
@@ -96,7 +131,6 @@ public class DataSeeder implements CommandLineRunner {
             post2.setTitle("Moda Sahili Sabah Yürüyüşü");
             post2.setContent("Tüm komşularımızı salı sabahı saat 07:00'da Moda sahilinde yapacağımız temiz hava yürüyüşüne bekliyoruz!");
             post2.setAuthor(officialUser);
-            post2.setCommunity(c2);
             post2.setScore(25);
             postRepository.save(post2);
 
@@ -104,11 +138,10 @@ public class DataSeeder implements CommandLineRunner {
             post3.setTitle("Torunum için hırka modeli arıyorum");
             post3.setContent("Kış geliyor malum, torunuma sıcak tutacak bir hırka modeli arıyorum, örnekleri olan atabilir mi?");
             post3.setAuthor(user2);
-            // Kendi profiline atıyor (herhangi bir community'e değil)
             post3.setScore(12);
             postRepository.save(post3);
 
-            System.out.println("Sahte (dummy) veriler başarıyla eklendi! Artık mobil taraftaki statik dataları silip API'yi kullanabilirsiniz.");
+            System.out.println("Sahte (dummy) veriler başarıyla eklendi!");
         }
     }
 }

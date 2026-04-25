@@ -28,14 +28,14 @@ public class CommunityController {
         ));
     }
 
-    @GetMapping("/{name}")
-    public ResponseEntity<?> getCommunityDetail(@PathVariable String name) {
-        return ResponseEntity.ok(communityService.getCommunityDetail(name));
-    }
-
-    @GetMapping("/{id:[0-9]+}")
-    public ResponseEntity<?> getCommunityById(@PathVariable Long id) {
-        return ResponseEntity.ok(communityService.getCommunityById(id));
+    @GetMapping("/{identifier}")
+    public ResponseEntity<?> getCommunity(@PathVariable String identifier) {
+        try {
+            Long id = Long.parseLong(identifier);
+            return ResponseEntity.ok(communityService.getCommunityById(id));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.ok(communityService.getCommunityDetail(identifier));
+        }
     }
 
     @PostMapping("/{id}/requests")

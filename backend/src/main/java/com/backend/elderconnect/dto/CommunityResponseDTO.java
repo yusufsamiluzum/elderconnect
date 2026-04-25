@@ -1,6 +1,7 @@
 package com.backend.elderconnect.dto;
 
 import com.backend.elderconnect.entities.CommunityType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.Builder;
 import lombok.AllArgsConstructor;
@@ -15,8 +16,10 @@ public class CommunityResponseDTO {
     private String name;
     private String description;
     private Integer memberCount;
-    private boolean isOfficial;
     private CommunityType type;
     private String ownerName;
+    @JsonProperty("isUserMember")
     private boolean isUserMember;
+    @JsonProperty("isUserModerator")
+    private boolean isUserModerator;
 }

@@ -99,9 +99,14 @@ export default function CommunityDetailScreen() {
                   <Users size={18} color="hsl(var(--secondary))" />
                   <Text className="text-secondary font-medium">Üyesiniz</Text>
                 </View>
-                <TouchableOpacity className="p-2 bg-muted border border-border rounded-lg justify-center">
-                  <Settings size={20} color="hsl(var(--muted-foreground))" />
-                </TouchableOpacity>
+                {community.isUserModerator && (
+                  <TouchableOpacity
+                    onPress={() => router.push(`/community/dashboard/${id}`)}
+                    className="p-2 bg-muted border border-border rounded-lg justify-center"
+                  >
+                    <Settings size={20} color="hsl(var(--muted-foreground))" />
+                  </TouchableOpacity>
+                )}
               </>
             ) : (
               <TouchableOpacity onPress={handleJoin} className="flex-1 py-3 bg-accent rounded-lg items-center">

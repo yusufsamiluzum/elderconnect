@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +35,10 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Error: User not found."));
 
+        Set<String> roles = user.getRoles().stream()
+                .map(Enum::name)
+                .collect(java.util.stream.Collectors.toSet());
+
         return UserProfileDTO.builder()
                 .username(user.getUsername())
                 .name(user.getName())
@@ -43,6 +48,7 @@ public class UserService {
                 .joinedAt(user.getJoinedAt())
                 .isApproved(user.isApproved())
                 .karmaScore(calculateKarma(user))
+                .roles(roles)
                 .build();
     }
 

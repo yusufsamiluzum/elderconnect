@@ -1,11 +1,11 @@
 package com.backend.elderconnect.dto;
 
-import java.util.Set;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
 public class RegisterRequest {
+
     @NotBlank
     @Size(min = 3, max = 20)
     private String username;
@@ -24,9 +24,16 @@ public class RegisterRequest {
     @Size(max = 50)
     private String city;
 
-    private Set<String> role;
-
     @NotBlank
     @Size(min = 6, max = 40)
     private String password;
+
+    // "user" veya "official" — admin register yolu yok
+    @NotBlank
+    private String accountType;
+
+    // Official hesap için zorunlu alanlar
+    private String organizationName;
+    private String organizationType;
+    private String organizationDescription;
 }

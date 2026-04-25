@@ -86,13 +86,8 @@ public class PostService {
             community = communityRepository.findById(communityId)
                     .orElseThrow(() -> new RuntimeException("Error: Community not found."));
 
-            // RULE 1: Bulletins (Official Communities) only allow OFFICIAL users to post
-            if (community.isOfficial() && !author.getRoles().contains(UserRole.ROLE_OFFICIAL)) {
-                throw new RuntimeException("Error: Only official accounts can post to this community (Bülten).");
-            }
-
-            // RULE 2: Public communities require membership to post (Reddit-like)
-            if (!community.isOfficial() && !community.getMembers().contains(author)) {
+            // Topluluk üyeliği kontrolü
+            if (!community.getMembers().contains(author)) {
                 throw new RuntimeException("Error: You must join this community before sharing a post.");
             }
         }

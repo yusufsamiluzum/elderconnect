@@ -1,0 +1,10 @@
+-topluluklara tıklayınca yüklenmesinde bad request hatamız var(topluluk dashboardı vs eklendi ancak yüklenmeme sorunu devam ediyor.)(sorun çözüldü)
+-gönderilierin altında yorum olmasına rağmen 0 yorum yazıyor yeni yorum atınca da o an görünüyor ancak geri gidip geri dönünce kayboluyor.
+-upvote veya downvote yapınca sadece değiştirebiliyoruz geri alamıyoruz ve sonsuz upvote veya downvote kullanabiliyoruz sayfa değişince geri gelip tekrar kullanabiliyoruz.
+-gönderi paylaşımı yaparken admini olmadığımız topluluklarda da paylaşım yapabiliyoruz. Topluluklarda bir admin sistemimiz var mı varsa nasıl işliyor?(bir admin sistemi implementeedildi ama use case controlerin sağlanması gerekiyor)
+-gönderilere hashtag benzeri bir yapı eklemeliyiz örneğin spor sanat vb bu sayede AI tavsiye sistemini entegre edebileceğiz.
+-profil tarafı gayet iyi çalışıyor ek olarak dahil olduğum topluluklar şeklinde bir info eklenebilir.(yapıldı)
+-gönderilerde kaydet tarzı bir buton göremedim.(yapıldı)
+-altta two diye bir şey yazıyor bu nedir?
+-bir resmi kullanıcı kaydı olabilmesi içi register olunurken iki seçenek olmalı bir standart user biri de resmi. Eğer grup isterse bir de resmi hesapların onaylanabilmesi için genel admin geliştirebiliriz.
+-
