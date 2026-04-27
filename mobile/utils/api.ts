@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { getToken } from './auth';
 
 // Physical device: use the computer's local WiFi IP
-const BACKEND_URL = 'http://192.168.1.103:8082';
+const BACKEND_URL = 'http://localhost:8082'; // desktop
 
 export const api = axios.create({
   baseURL: `${BACKEND_URL}/api`,
@@ -25,3 +25,7 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+export const getRecommendedPosts = () => api.get('/recommendations/posts');
+export const getRecommendedEvents = () => api.get('/recommendations/events');
+export const updateInterests = () => api.post('/recommendations/update-interests');

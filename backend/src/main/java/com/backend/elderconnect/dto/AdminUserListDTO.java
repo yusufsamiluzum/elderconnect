@@ -24,4 +24,5 @@ public class AdminUserListDTO {
     @JsonProperty("isApproved")
     private boolean isApproved;
     private LocalDateTime joinedAt;
+    private String interests;
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Home, Users, User } from 'lucide-react-native';
+import { Home, Users, User, Calendar } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -34,14 +34,21 @@ export default function TabLayout() {
       <Tabs.Screen
         name="communities"
         options={{
-          title: 'Communities',
+          title: 'Topluluklar',
           tabBarIcon: ({ color }) => <Users size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          title: 'Etkinlikler',
+          tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Profil',
           tabBarIcon: ({ color }) => <User size={24} color={color} />,
         }}
       />

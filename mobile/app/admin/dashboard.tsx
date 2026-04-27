@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Alert, TextInput, Modal, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Users, ClipboardList, CheckCircle, XCircle, Trash2, Building2, LogOut } from 'lucide-react-native';
+import { Users, ClipboardList, CheckCircle, XCircle, Trash2, Building2, LogOut, Sparkles } from 'lucide-react-native';
 import { api } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -261,7 +261,28 @@ export default function AdminDashboard() {
                         </View>
                       </View>
                       <Text className="text-muted-foreground text-sm">{u.name} {u.surname}</Text>
-                      <Text className="text-muted-foreground text-sm">{u.email}</Text>
+                      <Text className="text-muted-foreground text-sm mb-2">{u.email}</Text>
+                      
+                      {/* İlgi Alanları (AI Keywords) */}
+                      {u.interests ? (
+                        <View className="mt-2 pt-2 border-t border-border/50">
+                          <View className="flex-row items-center gap-1.5 mb-1.5">
+                            <Sparkles size={12} color="hsl(var(--accent))" />
+                            <Text className="text-[10px] font-bold text-accent uppercase tracking-wider">AI Tarafından Belirlenen İlgi Alanları</Text>
+                          </View>
+                          <View className="flex-row flex-wrap gap-1.5">
+                            {u.interests.split(',').map((interest, idx) => (
+                              <View key={idx} className="bg-accent/10 px-2 py-0.5 rounded-md border border-accent/20">
+                                <Text className="text-[10px] text-accent font-medium">{interest.trim()}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      ) : (
+                        <View className="mt-2 pt-2 border-t border-border/50">
+                          <Text className="text-[10px] text-muted-foreground italic">Henüz AI analizi yapılmadı (Yeterli etkileşim yok).</Text>
+                        </View>
+                      )}
                     </View>
                     <TouchableOpacity
                       onPress={() => handleDeleteUser(u.id, u.username)}

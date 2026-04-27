@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Plus, TrendingUp, Clock, Award, Users, Camera, X } from 'lucide-react-native';
+import { Plus, TrendingUp, Clock, Award, Users, Camera, X, Sparkles } from 'lucide-react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Post } from '../../components/Post';
 import { api } from '../../utils/api';
@@ -17,7 +17,7 @@ export default function FeedScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [sortBy, setSortBy] = useState<"hot" | "new" | "top">("new");
-  const [filterBy, setFilterBy] = useState<"all" | "following">("all");
+  const [filterBy, setFilterBy] = useState<"all" | "following" | "recommended">("all");
   
   const [showCreatePost, setShowCreatePost] = useState(false);
   const [newPostTitle, setNewPostTitle] = useState("");
@@ -37,10 +37,17 @@ export default function FeedScreen() {
   const fetchPosts = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/posts', {
-        params: { sort: sortBy, filter: filterBy, page: 0, size: 20 }
-      });
-      setPosts(response.data.content || response.data);
+      let response;
+      if (filterBy === "recommended") {
+        response = await api.get('/recommendations/posts');
+        setPosts(Array.isArray(response.data) ? response.data : []);
+      } else {
+        response = await api.get('/posts', {
+          params: { sort: sortBy, filter: filterBy, page: 0, size: 20 }
+        });
+        const data = response.data.content || response.data;
+        setPosts(Array.isArray(data) ? data : []);
+      }
     } catch (err) {
       console.error("Gönderiler yüklenemedi:", err);
     } finally {
@@ -279,22 +286,29 @@ export default function FeedScreen() {
             onPress={() => { setSortBy("hot"); setFilterBy("all"); }}
             className={`flex-1 py-1.5 ${sortBy === "hot" && filterBy === "all" ? "bg-accent" : "bg-transparent"} rounded flex-row justify-center items-center gap-2`}
           >
-            <TrendingUp size={18} color={sortBy === "hot" && filterBy === "all" ? "#fff" : "hsl(var(--foreground))"} />
-            <Text className={`${sortBy === "hot" && filterBy === "all" ? "text-white" : "text-foreground"} font-medium text-sm`}>Popüler</Text>
+            <TrendingUp size={16} color={sortBy === "hot" && filterBy === "all" ? "#fff" : "hsl(var(--foreground))"} />
+            <Text className={`${sortBy === "hot" && filterBy === "all" ? "text-white" : "text-foreground"} font-medium text-xs`}>Popüler</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={() => { setSortBy("new"); setFilterBy("all"); }}
             className={`flex-1 py-1.5 ${sortBy === "new" && filterBy === "all" ? "bg-accent" : "bg-transparent"} rounded flex-row justify-center items-center gap-2`}
           >
-            <Clock size={18} color={sortBy === "new" && filterBy === "all" ? "#fff" : "hsl(var(--foreground))"} />
-            <Text className={`${sortBy === "new" && filterBy === "all" ? "text-white" : "text-foreground"} font-medium text-sm`}>En Yeni</Text>
+            <Clock size={16} color={sortBy === "new" && filterBy === "all" ? "#fff" : "hsl(var(--foreground))"} />
+            <Text className={`${sortBy === "new" && filterBy === "all" ? "text-white" : "text-foreground"} font-medium text-xs`}>En Yeni</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={() => { setFilterBy("recommended"); }}
+            className={`flex-1 py-1.5 ${filterBy === "recommended" ? "bg-accent" : "bg-transparent"} rounded flex-row justify-center items-center gap-2`}
+          >
+            <Sparkles size={16} color={filterBy === "recommended" ? "#fff" : "hsl(var(--foreground))"} />
+            <Text className={`${filterBy === "recommended" ? "text-white" : "text-foreground"} font-medium text-xs`}>Sizin İçin</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={() => { setSortBy("new"); setFilterBy("following"); }}
             className={`flex-1 py-1.5 ${filterBy === "following" ? "bg-accent" : "bg-transparent"} rounded flex-row justify-center items-center gap-2`}
           >
-            <Award size={18} color={filterBy === "following" ? "#fff" : "hsl(var(--foreground))"} />
-            <Text className={`${filterBy === "following" ? "text-white" : "text-foreground"} font-medium text-sm`}>Senin Sayfan</Text>
+            <Award size={16} color={filterBy === "following" ? "#fff" : "hsl(var(--foreground))"} />
+            <Text className={`${filterBy === "following" ? "text-white" : "text-foreground"} font-medium text-xs`}>Takip</Text>
           </TouchableOpacity>
         </View>
 

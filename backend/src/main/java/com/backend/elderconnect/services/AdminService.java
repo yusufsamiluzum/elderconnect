@@ -147,6 +147,7 @@ public class AdminService {
                 .roles(user.getRoles().stream().map(Enum::name).collect(Collectors.toSet()))
                 .isApproved(user.isApproved())
                 .joinedAt(user.getJoinedAt())
+                .interests(user.getInterests())
                 .build();
     }
 }

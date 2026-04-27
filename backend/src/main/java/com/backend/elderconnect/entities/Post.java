@@ -80,4 +80,7 @@ public class Post {
     @JoinColumn(name = "original_post_id", nullable = true)
     private Post originalPost;
 
+    @Column(length = 500)
+    private String keywords;
+
 }

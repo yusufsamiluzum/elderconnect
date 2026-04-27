@@ -61,6 +61,10 @@ public class User {
     @Transient 
     private Integer karmaScore;
 
+    // AI Generated interests based on user activity (comma separated keywords)
+    @Column(length = 500)
+    private String interests;
+
 
     // --- RELATIONSHIPS ---
 
