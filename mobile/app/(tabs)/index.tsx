@@ -65,6 +65,9 @@ export default function FeedScreen() {
   };
 
   useEffect(() => {
+    if (filterBy === "recommended") {
+      api.post('/recommendations/update-interests').catch(() => {});
+    }
     fetchPosts();
   }, [sortBy, filterBy]);
 

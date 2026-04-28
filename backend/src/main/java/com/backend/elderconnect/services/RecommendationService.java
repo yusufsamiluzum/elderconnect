@@ -19,7 +19,7 @@ public class RecommendationService {
     private final PostVoteRepository postVoteRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
-    private final GeminiService geminiService;
+    private final GroqService groqService;
 
     public void updateUserInterests(User user) {
         // 1. En yeni beğenilen postlar
@@ -59,7 +59,7 @@ public class RecommendationService {
                 .limit(20)
                 .collect(Collectors.toList());
 
-        String keywords = geminiService.extractKeywords(recentActivity);
+        String keywords = groqService.extractKeywords(recentActivity);
         if (!keywords.isEmpty()) {
             user.setInterests(keywords);
             userRepository.save(user);

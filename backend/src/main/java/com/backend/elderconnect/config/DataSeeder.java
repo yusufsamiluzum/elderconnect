@@ -109,6 +109,7 @@ public class DataSeeder implements CommandLineRunner {
         createEvent("Tarih Yolculuğu: Galata", "Rehber eşliğinde Galata turu.", LocalDateTime.now().plusDays(10), "Galata Kulesi Önü", off1, "tarih, gezi, istanbul");
 
         // 6. ETKİLEŞİMLER
+        // mehmet_bey - bahçe, sağlık, tarih ilgili
         likePost(u1, posts.get(0));
         likePost(u1, posts.get(1));
         likePost(u1, posts.get(12));
@@ -116,6 +117,38 @@ public class DataSeeder implements CommandLineRunner {
         likePost(u1, posts.get(3));
         commentPost(u1, posts.get(0), "Toprak gerçekten en büyük huzur.");
         joinEvent(u1, eventRepository.findAll().get(1));
+
+        // fatma_hanim - yemek, el sanatı ilgili
+        likePost(u2, posts.get(6));
+        likePost(u2, posts.get(7));
+        likePost(u2, posts.get(8));
+        likePost(u2, posts.get(17));
+        commentPost(u2, posts.get(6), "Tarhana tarifini denedim, harika oldu!");
+        commentPost(u2, posts.get(7), "Mahlep miktarı çok önemli, haklısınız.");
+        joinEvent(u2, eventRepository.findAll().get(0));
+
+        // ali_hoca - tarih, kültür ilgili
+        likePost(u3, posts.get(3));
+        likePost(u3, posts.get(4));
+        likePost(u3, posts.get(5));
+        likePost(u3, posts.get(18));
+        commentPost(u3, posts.get(4), "O günleri dedem de anlatırdı, çok değerli.");
+        joinEvent(u3, eventRepository.findAll().get(3));
+
+        // ayse_teyze - seyahat, gezi ilgili
+        likePost(u4, posts.get(18));
+        likePost(u4, posts.get(19));
+        likePost(u4, posts.get(5));
+        likePost(u4, posts.get(14));
+        commentPost(u4, posts.get(18), "Birgi'yi çok sevdim, herkese tavsiye ederim.");
+        joinEvent(u4, eventRepository.findAll().get(3));
+
+        // huseyin_amca - ahşap, hobi ilgili
+        likePost(u5, posts.get(16));
+        likePost(u5, posts.get(17));
+        likePost(u5, posts.get(14));
+        commentPost(u5, posts.get(16), "Ahşap oyma gerçekten sabır işi.");
+        joinEvent(u5, eventRepository.findAll().get(1));
 
         // 7. MANUEL ILGI ALANLARI (AI YERINE SEEDER ICIN)
         u1.setInterests("bahçecilik, sağlık, yürüyüş, tarih, bitki");

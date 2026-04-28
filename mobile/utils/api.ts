@@ -2,8 +2,11 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import { getToken } from './auth';
 
-// Physical device: use the computer's local WiFi IP
-const BACKEND_URL = 'http://localhost:8082'; // desktop
+// Emulator: 10.0.2.2 maps to host machine's localhost
+// Physical device: replace with your computer's local WiFi IP
+const BACKEND_URL = Platform.OS === 'android'
+  ? 'http://10.0.2.2:8082'
+  : 'http://localhost:8082';
 
 export const api = axios.create({
   baseURL: `${BACKEND_URL}/api`,
